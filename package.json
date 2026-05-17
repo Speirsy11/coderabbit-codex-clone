@@ -1,0 +1,34 @@
+{
+  "name": "coderabbit-codex-clone",
+  "version": "0.1.0",
+  "description": "Local CodeRabbit-style review CLI powered by the user's authenticated Codex CLI subscription.",
+  "type": "module",
+  "bin": {
+    "crx": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx test/*.test.ts",
+    "dev": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "codex",
+    "code-review",
+    "cli",
+    "coderabbit-style"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
