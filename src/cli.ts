@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile } from "node:fs/promises";
+import { lstat, readFile, realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { codexAuthStatus, runCodexExec } from "./codex.js";
 import { CONFIG_NAME, initConfig, loadConfig } from "./config.js";
@@ -119,11 +119,24 @@ function parseReviewArgs(args: string[]): ReviewOptions {
 
 async function readInstructionFiles(files: string[], repoDir: string): Promise<string> {
   const chunks: string[] = [];
+  const realRepoDir = await realpath(repoDir);
   for (const file of files) {
     const path = resolve(repoDir, file);
-    const rel = relative(repoDir, path);
-    if (rel.startsWith("..") || rel === "" || isAbsolute(rel)) throw new Error(`Config file must be inside repo: ${file}`);
-    chunks.push(`# ${file}\n${await readFile(path, "utf8")}`);
+    const lexicalRel = relative(repoDir, path);
+    if (lexicalRel.startsWith("..") || lexicalRel === "" || isAbsolute(lexicalRel)) throw new Error(`Config file must be inside repo: ${file}`);
+
+    const linkInfo = await lstat(path);
+    if (linkInfo.isSymbolicLink()) throw new Error(`Config file must not be a symlink: ${file}`);
+
+    const realFilePath = await realpath(path);
+    const realRel = relative(realRepoDir, realFilePath);
+    if (realRel.startsWith("..") || realRel === "" || isAbsolute(realRel)) throw new Error(`Config file must be inside repo: ${file}`);
+
+    const fileInfo = await stat(realFilePath);
+    if (!fileInfo.isFile()) throw new Error(`Config path must be a file: ${file}`);
+    if (fileInfo.size > 50000) throw new Error(`Config file is too large: ${file}`);
+
+    chunks.push(`# ${file}\n${await readFile(realFilePath, "utf8")}`);
   }
   return chunks.join("\n\n").slice(0, 50000);
 }

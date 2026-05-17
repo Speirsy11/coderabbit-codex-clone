@@ -27,13 +27,30 @@ export async function assertGitRepo(dir: string): Promise<string> {
 }
 
 export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number }> {
+  const diff = await collectDiffText(options);
+  const bytes = Buffer.byteLength(diff, "utf8");
+  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes };
+  const truncated = Buffer.from(diff, "utf8").subarray(0, options.maxDiffBytes).toString("utf8");
+  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes };
+}
+
+async function collectDiffText(options: ReviewOptions): Promise<string> {
   const command = buildDiffCommand(options);
   const result = await runGit(command.args, options.dir);
-  if (result.code !== 0) throw new Error(result.stderr || "git diff failed");
-  const bytes = Buffer.byteLength(result.stdout, "utf8");
-  if (bytes <= options.maxDiffBytes) return { diff: result.stdout, truncated: false, bytes };
-  const truncated = Buffer.from(result.stdout, "utf8").subarray(0, options.maxDiffBytes).toString("utf8");
-  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes };
+  if (result.code === 0) return result.stdout;
+
+  if (!options.base && !options.baseCommit && options.type === "committed") {
+    const rootCommit = await runGit(["show", "--format=", "--no-ext-diff", "--no-color", "HEAD"], options.dir);
+    if (rootCommit.code === 0) return rootCommit.stdout;
+  }
+
+  if (!options.base && !options.baseCommit && (options.type === "all" || options.type === "uncommitted")) {
+    const staged = await runGit(["diff", "--cached", "--no-ext-diff", "--no-color"], options.dir);
+    const unstaged = await runGit(["diff", "--no-ext-diff", "--no-color"], options.dir);
+    if (staged.code === 0 && unstaged.code === 0) return [staged.stdout, unstaged.stdout].filter(Boolean).join("\n");
+  }
+
+  throw new Error(result.stderr || "git diff failed");
 }
 
 async function runGit(args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> {

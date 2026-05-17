@@ -16,7 +16,7 @@ The default AI command is:
 npx -y @openai/codex
 ```
 
-Override it with `CRX_CODEX_COMMAND` or `codexCommand` in `crx.config.json`.
+Override it with `CRX_CODEX_COMMAND`. A repo-local `codexCommand` in `crx.config.json` is only honored when `CRX_TRUST_REPO_CODEX_COMMAND=1` is set, because checked-in command config from untrusted repos can execute arbitrary local programs.
 
 ## Usage
 
@@ -49,7 +49,7 @@ Recommended loop:
 
 ## Safety
 
-`crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. The MVP never auto-applies code changes.
+`crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. Review prompts are sent to Codex over stdin rather than process argv. Extra instruction files must stay inside the repo and symlinks are rejected. The MVP never auto-applies code changes.
 
 If the diff exceeds `--max-diff-bytes`, it is truncated and the truncation is reported in plain and JSONL output.
 
