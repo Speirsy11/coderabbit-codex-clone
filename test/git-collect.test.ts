@@ -12,13 +12,7 @@ function git(cwd: string, args: string[]): void {
 }
 
 test("collects root commit diff for committed review", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "crx-root-"));
-  git(dir, ["init"]);
-  git(dir, ["config", "user.email", "test@example.com"]);
-  git(dir, ["config", "user.name", "Test User"]);
-  await writeFile(join(dir, "hello.txt"), "hello\n");
-  git(dir, ["add", "hello.txt"]);
-  git(dir, ["commit", "-m", "initial"]);
+  const dir = await createRootCommit("initial");
 
   const result = await collectDiff({
     dir,
@@ -32,3 +26,30 @@ test("collects root commit diff for committed review", async () => {
   assert.match(result.diff, /hello\.txt/);
   assert.match(result.diff, /\+hello/);
 });
+
+test("root commit detection ignores commit message parent-looking lines", async () => {
+  const dir = await createRootCommit("initial\n\nparent not-a-real-header");
+
+  const result = await collectDiff({
+    dir,
+    type: "committed",
+    configFiles: [],
+    color: false,
+    maxDiffBytes: 10000,
+    mode: "plain"
+  });
+
+  assert.match(result.diff, /hello\.txt/);
+  assert.match(result.diff, /\+hello/);
+});
+
+async function createRootCommit(message: string): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), "crx-root-"));
+  git(dir, ["init"]);
+  git(dir, ["config", "user.email", "test@example.com"]);
+  git(dir, ["config", "user.name", "Test User"]);
+  await writeFile(join(dir, "hello.txt"), "hello\n");
+  git(dir, ["add", "hello.txt"]);
+  git(dir, ["commit", "-m", message]);
+  return dir;
+}

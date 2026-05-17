@@ -56,7 +56,8 @@ async function collectDiffText(options: ReviewOptions): Promise<string> {
 async function isRootCommit(cwd: string): Promise<boolean> {
   const commit = await runGit(["cat-file", "-p", "HEAD"], cwd);
   if (commit.code !== 0) return false;
-  return !commit.stdout.split("\n").some((line) => line.startsWith("parent "));
+  const header = commit.stdout.split(/\r?\n\r?\n/, 1)[0] ?? "";
+  return !header.split(/\r?\n/).some((line) => line.startsWith("parent "));
 }
 
 async function runGit(args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> {
