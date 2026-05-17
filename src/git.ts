@@ -39,7 +39,7 @@ async function collectDiffText(options: ReviewOptions): Promise<string> {
   const result = await runGit(command.args, options.dir);
   if (result.code === 0) return result.stdout;
 
-  if (!options.base && !options.baseCommit && options.type === "committed") {
+  if (!options.base && !options.baseCommit && options.type === "committed" && (await isRootCommit(options.dir))) {
     const rootCommit = await runGit(["show", "--format=", "--no-ext-diff", "--no-color", "HEAD"], options.dir);
     if (rootCommit.code === 0) return rootCommit.stdout;
   }
@@ -51,6 +51,12 @@ async function collectDiffText(options: ReviewOptions): Promise<string> {
   }
 
   throw new Error(result.stderr || "git diff failed");
+}
+
+async function isRootCommit(cwd: string): Promise<boolean> {
+  const commit = await runGit(["cat-file", "-p", "HEAD"], cwd);
+  if (commit.code !== 0) return false;
+  return !commit.stdout.split("\n").some((line) => line.startsWith("parent "));
 }
 
 async function runGit(args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> {
