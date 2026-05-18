@@ -3,6 +3,14 @@ set -uo pipefail
 
 review_type="${CRX_REVIEW_TYPE:-committed}"
 out="${CRX_REVIEW_OUT:-crx-review.jsonl}"
+config_out="${CRX_CONFIG_OUT:-crx-config.json}"
+
+if [ "${CRX_SKIP_CONFIG_VALIDATE:-0}" != "1" ]; then
+  if ! crx config validate --json > "$config_out"; then
+    echo "crx config validation failed. See $config_out" >&2
+    exit 1
+  fi
+fi
 
 set +e
 crx review --agent --type "$review_type" > "$out"
