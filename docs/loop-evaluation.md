@@ -201,8 +201,8 @@ Add docs/examples for local tool configuration in CI and consider a small runtim
 
 ### Validation
 
-- `npm test` — pending for this slice.
-- `npm run build` — pending for this slice.
+- `npm test` — pass, 49 tests.
+- `npm run build` — pass.
 
 ### Production-readiness score
 
