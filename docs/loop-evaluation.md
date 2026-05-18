@@ -715,3 +715,30 @@ This closes the local subset of CodeRabbit-style autofix verification and improv
 ### Next recommended slice
 
 Consider a Git hook recipe or small history/metrics artifact only if another safe polish slice is needed; otherwise keep validating the now-complete local/CI quality-gate wedge.
+
+
+## 2026-05-18 15:17 BST — Loop 21: Local Git hook recipes
+
+### Development completed
+
+- Commit `7f4d9f4` (`docs: add Git hook recipes`).
+- Added `docs/git-hooks.md` with a pre-push recipe that runs `scripts/crx-quality-gate.sh`, preserves normal `--no-verify` escape semantics, and documents why unattended hooks should not run `--fix`.
+- Linked the hook docs from the README automation section.
+- Added docs regression coverage so the pre-push recipe, deterministic gate, and manual `--verify-fix` flow stay documented.
+
+### Validation
+
+- `npm test` — pass, 76 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.36 / 10**. The local developer workflow now has a copy-paste pre-push path that mirrors the CI helper without introducing unsafe unattended auto-fixes.
+
+### CodeRabbit comparison
+
+This addresses the practical local analogue to CodeRabbit/IDE automatic review after local changes while staying CLI-first and recoverable. Hosted IDE extension behavior and automatic PR comments remain out of scope.
+
+### Next recommended slice
+
+If time remains before 16:20, do either a history/metrics artifact slice or a final critical docs/schema review; keep every stop at clean validation and push points.
