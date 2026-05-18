@@ -42,8 +42,11 @@ if [ "${CRX_SKIP_ARTIFACTS:-0}" != "1" ] && [ -s "$out" ]; then
 fi
 
 if [ "$artifact_code" -ne 0 ]; then
-  echo "crx gate artifact generation failed" >&2
-  exit 1
+  if [ "$code" -eq 0 ]; then
+    echo "crx gate artifact generation failed" >&2
+    exit 1
+  fi
+  echo "crx gate artifact generation failed; preserving review exit $code" >&2
 fi
 
 case "$code" in
