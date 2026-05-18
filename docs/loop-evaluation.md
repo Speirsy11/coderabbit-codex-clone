@@ -576,3 +576,30 @@ This continues closing the local/CI operational parity gap: teams can inspect ef
 ### Next recommended slice
 
 Add an end-to-end fixture review that combines config validation, local tool results, and summarize artifacts without requiring an authenticated Codex call.
+
+
+## 2026-05-18 15:00 BST — Loop 18: Review context config-source reporting
+
+### Development completed
+
+- Commit `4f76e02` (`Report config source in review context`).
+- Added `configSource` to the `review_context` JSONL event so artifacts show whether the run used `crx.config.json`, `.coderabbit.yaml`, `.coderabbit.yml`, or defaults.
+- Updated the runtime validator, JSON schema, agent-contract docs, and E2E coverage.
+- Retained tolerant consumers by adding the field as optional schema/context metadata.
+
+### Validation
+
+- `npm test` — pass, 72 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.3 / 10**. Review artifacts are now more self-diagnosing: CI users can correlate the effective config preflight file with the review context event without guessing which source was loaded.
+
+### CodeRabbit comparison
+
+This improves repository-settings observability for local/CI runs, similar to being able to inspect CodeRabbit's effective repo configuration. Remaining gaps are hosted PR UX, dashboards, organization-level learnings, and managed execution.
+
+### Next recommended slice
+
+Add a no-Codex fixture smoke test for config validation plus artifact summarization, or continue tightening docs/schema examples while staying at clean validation points.
