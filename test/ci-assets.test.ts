@@ -20,3 +20,9 @@ test("quality gate shell wrapper parses", () => {
   const result = spawnSync("bash", ["-n", "scripts/crx-quality-gate.sh"], { cwd: projectRoot, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
 });
+
+
+test("agent loop shell wrapper parses", () => {
+  const result = spawnSync("bash", ["-n", "scripts/crx-agent-loop.sh"], { cwd: projectRoot, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+});

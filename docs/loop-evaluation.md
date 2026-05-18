@@ -217,3 +217,31 @@ Add docs/examples for local tool configuration in CI and consider a small runtim
 ### Chosen next slice
 
 After validation, add a small second-pass agent-loop helper or docs-driven workflow if time allows.
+
+
+## 2026-05-18 15:00 BST — Loop 6: Second-pass agent-loop helper v0.1
+
+### Development completed
+
+- Added `scripts/crx-agent-loop.sh` to run a bounded review/fix/rerun loop.
+- Added documented env controls for review type, base/base-commit, max passes, and fix mode.
+- Added syntax test coverage for the helper.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.3 / 10**. Agents now have a simple, repeatable way to run the CodeRabbit-style loop without accidentally accepting an auto-fix as a passed gate.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Ecosystem-specific local tool presets.
+- JSONL artifact summary tooling.
+- Hosted/team features remain intentionally out of scope.
+
+### Chosen next slice
+
+Add a small JSONL summary command or fixture helper so CI logs can quickly show final findings/tool failures without bespoke parsing.

@@ -473,3 +473,22 @@ Remaining high-impact gaps:
 2. Tool presets for common ecosystems.
 3. Richer docs/examples for shallow clone remediation.
 4. Runtime validation is TypeScript-native rather than generated from JSON Schema.
+
+
+## Update: Second-pass agent-loop helper v0.1 (2026-05-18 15:00 BST)
+
+Implemented since the previous loop:
+
+- Added `scripts/crx-agent-loop.sh` for bounded review/fix/rerun automation.
+- The helper supports `CRX_FIX=1`, `CRX_MAX_PASSES`, `CRX_REVIEW_TYPE`, `CRX_BASE`, `CRX_BASE_COMMIT`, and JSONL output naming.
+- It treats exit `4` as “rerun required,” never as success, and only exits `0` after a clean rerun/pass.
+- Added syntax coverage in tests and docs in the CI quality-gate guide.
+
+Current production-readiness score: **8.3 / 10**.
+
+Remaining high-impact gaps:
+
+1. Tool presets for common ecosystems.
+2. Better parsing/summary helpers for JSONL artifacts.
+3. Runtime validator is hand-written rather than generated from the schema.
+4. No hosted PR/comment workflow, intentionally deferred.

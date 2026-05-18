@@ -90,3 +90,14 @@ Example `crx.config.json` snippet:
 ```
 
 Commands are split and spawned without a shell. Use array form for exact argv control. Tool output is truncated before being included in JSONL and the Codex prompt. Use `reviewProfile: "chill"` for production-risk gates and `"assertive"` when you want broader maintainability feedback.
+
+
+## Second-pass agent loop
+
+For agents that are allowed to apply local fixes, use `scripts/crx-agent-loop.sh` with a small pass limit. It runs `crx review --agent`, optionally with `--fix`, and reruns automatically when the first pass exits `4` because a patch was applied.
+
+```bash
+CRX_FIX=1 CRX_MAX_PASSES=2 CRX_REVIEW_TYPE=committed scripts/crx-agent-loop.sh
+```
+
+The helper never treats “fix applied” as success. It only exits `0` after a rerun exits `0`; blocking findings or blocking tool failures still exit `3`.

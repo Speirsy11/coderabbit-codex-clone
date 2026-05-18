@@ -44,7 +44,7 @@ crx config init
 
 ## CI Quality Gate
 
-For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, and `docs/schema/agent-event.schema.json` for the JSONL event schema. A reusable shell wrapper is available at `scripts/crx-quality-gate.sh`.
+For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable shell wrappers are available at `scripts/crx-quality-gate.sh` for one-pass gating and `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop.
 
 ## Agent Loop
 
