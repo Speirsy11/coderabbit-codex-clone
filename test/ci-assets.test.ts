@@ -26,6 +26,15 @@ test("GitHub Actions docs preserve review artifacts", async () => {
   assert.match(docs, /actions\/upload-artifact@v4/);
 });
 
+test("Git hook docs keep pre-push gate safe and deterministic", async () => {
+  const docs = await readFile(resolve(projectRoot, "docs/git-hooks.md"), "utf8");
+  assert.match(docs, /pre-push/);
+  assert.match(docs, /CRX_REVIEW_TYPE=committed scripts\/crx-quality-gate\.sh/);
+  assert.match(docs, /Do not run `--fix` from an unattended hook/);
+  assert.match(docs, /--verify-fix/);
+});
+
+
 test("CodeRabbit config mapping docs cover local equivalents", async () => {
   const docs = await readFile(resolve(projectRoot, "docs/coderabbit-config-mapping.md"), "utf8");
   assert.match(docs, /reviews\.profile/);
