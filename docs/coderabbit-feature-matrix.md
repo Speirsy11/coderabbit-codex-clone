@@ -4,15 +4,21 @@ Assessed against CodeRabbit docs fetched on 2026-05-18, starting from `https://d
 
 ## Next-gap summary
 
-For our goal — **agent-run local/CI code quality review after each change set** — `crx` already covers the core wedge: local Git diff collection, Codex-backed review, plain output, JSONL agent output, severity-based findings, and a bounded fix loop. The biggest gaps versus CodeRabbit are:
+For our goal — **agent-run local/CI code quality review after each change set** — `crx` now covers the core local/CI wedge: scoped Git diff collection, Codex-backed review, plain output, JSONL agent output, severity/category findings, path filters/instructions, guideline loading, local tool signals, CI artifacts, config preflight, `.coderabbit.yaml` subset import, and a bounded fix loop. The biggest remaining gaps versus CodeRabbit are:
 
-1. **CI/change-set automation:** add a non-interactive CI recipe that reviews exactly one change set, emits machine-readable results, and fails only on `critical`/`major` findings.
-2. **Configuration parity:** add `.coderabbit.yaml`-style concepts we can support locally: path filters, path instructions, review profile, and extra guideline files.
-3. **Finding contract depth:** enrich JSONL findings toward CodeRabbit’s agent shape: severity, file path, fix instructions, suggestions, review context, status, complete, and error events.
-4. **External tool layer:** add optional local linters/security scanners before/alongside Codex review; this is the clearest quality boost for CI.
-5. **Agent loop hardening:** implement loop limits, second-pass review, quiet long-running status, and clear summaries as first-class documented workflows.
+1. **Hosted review UX:** PR comments, incremental hosted reviews, dashboards, and team analytics are still intentionally out of scope for the local clone.
+2. **Richer configuration import:** only the safe local subset of `.coderabbit.yaml` is mapped; hosted auto-review and managed tool settings are documented but not executed.
+3. **Advanced context:** organization learnings, issue/PR history, MCP context, cross-repo analysis, and AST-grep instruction ecosystems remain deferred.
+4. **Optional polish:** post-fix verification hooks, Git hook examples, and history/metrics artifacts would improve ergonomics but are no longer blockers for local/CI quality gates.
 
-Must-have for the next slice: **change-set scoped `crx --agent` in CI + path filters/instructions + stable JSONL schema + exit-code gate + second-pass agent loop docs**. Everything hosted, PR-comment, dashboard, learnings database, MCP, and org analytics can wait.
+The previous must-have wedge — **change-set scoped `crx --agent` in CI + path filters/instructions + stable JSONL schema + exit-code gate + second-pass agent loop docs** — is implemented. Future slices should avoid redoing that foundation and focus only on the remaining optional/hosted parity gaps above.
+
+## Implementation status as of 2026-05-18
+
+- **Implemented local/CI core:** `review --agent`, stable JSONL schema/docs, exit codes `0`/`1`/`3`/`4`, config validation, local tool checks, artifact summaries, SARIF/JUnit export, and CI helper scripts.
+- **Implemented scope/config subset:** path filters, path instructions, common guideline auto-loading, custom guideline patterns, `chill`/`assertive` review profiles, presets for Node/Python/Ruby, and safe `.coderabbit.yaml`/`.coderabbit.yml` fallback mapping.
+- **Implemented agent-loop support:** bounded second-pass helper, auto-fix rerun signaling, blocker counts, config-source metadata, and no-auth fixture coverage for CI artifacts.
+- **Deferred by design:** hosted PR bot behavior, dashboards, CodeRabbit API compatibility, organization learnings, MCP/cross-repo context, and fully managed sandboxed tool execution.
 
 ## Priority legend
 
@@ -63,7 +69,7 @@ Must-have for the next slice: **change-set scoped `crx --agent` in CI + path fil
 
 ## Recommended next implementation slices
 
-### Slice 1 — CI-grade local reviewer (P0)
+### Slice 1 — CI-grade local reviewer (P0) — implemented
 
 - Stable `crx review --agent --type committed|uncommitted|all --base ...` JSONL contract.
 - Exit `3` when `critical` or `major` findings remain; `0` otherwise; controlled `error` event on failures.
@@ -71,17 +77,17 @@ Must-have for the next slice: **change-set scoped `crx --agent` in CI + path fil
 - Sparse status events for long-running reviews.
 - One documented two-pass agent loop.
 
-### Slice 2 — Review scope and instructions (P0/P1)
+### Slice 2 — Review scope and instructions (P0/P1) — implemented
 
 - Path filters with safe defaults for generated/dependency/binary/media files.
 - Glob-scoped path instructions.
 - Auto-detected guideline files: `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md`, `GEMINI.md`.
 - Configurable extra guideline patterns.
 
-### Slice 3 — Quality signal enrichment (P1)
+### Slice 3 — Quality signal enrichment (P1) — implemented
 
 - Optional local lint/test/security command integration.
-- Merge command results into JSONL as `tool_result` or `finding` events.
+- Merge command results into JSONL as `tool_result` events and artifact failures.
 - Review profile: `chill` for critical/major only, `assertive` for broader suggestions.
 
 ### Explicit deferrals
