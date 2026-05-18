@@ -14,6 +14,8 @@ CI should parse stdout as JSONL only and archive it as an artifact. Stderr is in
 ## Generic shell
 
 ```bash
+crx config validate --json > crx-config.json
+
 set +e
 crx review --agent --type committed > crx-review.jsonl
 code=$?
@@ -53,6 +55,7 @@ jobs:
       - run: npm run build
       - name: Run crx review
         run: |
+          node dist/cli.js config validate --json > crx-config.json
           set +e
           node dist/cli.js review --agent --type committed > crx-review.jsonl
           code=$?
@@ -71,6 +74,7 @@ jobs:
         with:
           name: crx-review
           path: |
+            crx-config.json
             crx-review.jsonl
             crx-review.txt
             crx-review.sarif
