@@ -582,3 +582,32 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: optional `.coderabbit.yaml` subset mapping/import docs and JUnit/tool-result artifact export.
+
+## 2026-05-18 update — JUnit summary export v1.2
+
+Implemented:
+
+- Added `crx summarize --format junit` for CI test-report style consumers.
+- Blocking findings and blocking local tool failures become failing JUnit test cases; clean artifacts produce a passing case.
+- Added unit and E2E tests plus README/CI docs.
+
+Validation: `npm run build` and `npm test` pass.
+
+Remaining high-impact gaps: optional `.coderabbit.yaml` subset mapping/import docs and more CI examples that publish SARIF/JUnit artifacts.
+
+
+## Update: JUnit artifact adapter v0.1 (2026-05-18 15:50 BST)
+
+Implemented since the previous loop:
+
+- Added JUnit XML conversion for critical/major findings and blocking local tool failures.
+- Exposed it through `crx summarize --format junit` and `scripts/crx-jsonl-to-junit.mjs`.
+- Added unit and script tests.
+
+Current production-readiness score: **8.8 / 10**.
+
+Remaining high-impact gaps:
+
+1. Optional `.coderabbit.yaml` subset import/mapping.
+2. CI examples uploading SARIF/JUnit artifacts end-to-end.
+3. More nuanced tool-result severity mapping.

@@ -168,3 +168,23 @@ Validation:
 Next likely gap:
 
 - Optional `.coderabbit.yaml` subset mapping/import docs or JUnit/tool-result artifact export.
+
+## 2026-05-18 16:00–16:05 BST — JUnit summary export v1.2
+
+Evaluation source: artifact-adapter gap for CI systems that render test reports rather than SARIF/code scanning.
+
+Implemented:
+
+- Added `crx summarize --format junit <jsonl>` to convert blocking findings and blocking local tool failures into JUnit XML.
+- Clean artifacts emit a passing `crx:pass` test case; blockers become failing test cases.
+- Added unit and E2E coverage for JUnit conversion.
+- Updated README and CI docs.
+
+Validation:
+
+- `npm run build` passed.
+- `npm test` passed: 59/59.
+
+Next likely gap:
+
+- Optional `.coderabbit.yaml` subset mapping/import docs, or artifact examples in GitHub Actions.

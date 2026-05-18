@@ -358,3 +358,31 @@ Consider a tiny `.coderabbit.yaml` mapping doc or keep improving validation/docs
 ### Chosen next slice
 
 Add a final validation/evaluation pass and choose another small artifact/config improvement if time remains.
+
+
+## 2026-05-18 15:50 BST — Loop 11: JUnit artifact adapter v0.1
+
+### Development completed
+
+- Added JUnit XML conversion for blocking results.
+- Wired `crx summarize --format junit`.
+- Added script and unit coverage.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.8 / 10**. The gate now supports JSONL, text summaries, SARIF, and JUnit-style CI artifacts.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Optional CodeRabbit YAML concept mapping.
+- Fully worked CI artifact upload examples.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Run a final validation/evaluation checkpoint, then continue with docs/artifact polish if still before the deadline.

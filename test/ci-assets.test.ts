@@ -88,3 +88,12 @@ test("sarif helper converts findings", () => {
   assert.equal(sarif.runs[0].results[0].ruleId, "crx/potential_issue/major");
   assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine, 3);
 });
+
+
+test("junit helper converts blocking results", () => {
+  const input = JSON.stringify({ type: "tool_result", name: "lint", exitCode: 2, durationMs: 12, passed: false, blocking: true, stderr: "bad" }) + "\n";
+  const result = spawnSync(process.execPath, ["scripts/crx-jsonl-to-junit.mjs", "-"], { cwd: projectRoot, input, encoding: "utf8" });
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stdout, /<testsuite name="crx"/);
+  assert.match(result.stdout, /<failure type="tool_result"/);
+});

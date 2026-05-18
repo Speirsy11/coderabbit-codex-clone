@@ -132,3 +132,26 @@ scripts/crx-jsonl-to-sarif.mjs crx-review.jsonl > crx-review.sarif
 ```
 
 Critical and major findings become SARIF `error` results; minor findings become `warning`; trivial/info findings become `note`. The script exits `3` when any SARIF error is present.
+
+## JUnit export
+
+For CI systems that already visualize test reports, convert blocking crx results to failing JUnit cases:
+
+```bash
+crx summarize --format junit crx-review.jsonl > crx-review.junit.xml
+# or, without the built CLI:
+scripts/crx-jsonl-to-junit.mjs crx-review.jsonl > crx-review.junit.xml
+```
+
+Only blocking findings and blocking local tool failures become failures; a clean artifact emits one passing `crx:pass` testcase.
+
+
+## JUnit export
+
+Convert blocking findings and blocking local tool failures to JUnit XML for CI systems that render test reports:
+
+```bash
+crx summarize --format junit crx-review.jsonl > crx-review.junit.xml
+```
+
+Clean artifacts produce a passing `crx:pass` test case; blocking findings and tool failures become failing test cases with the relevant details.

@@ -4,12 +4,7 @@ const severities = ["critical", "major", "minor", "trivial", "info"] as const;
 
 export function summarizeAgentJsonl(input: string): string {
   const events = parseAgentJsonl(input);
-  const findings = events.filter((event): event is Finding => event.type === "finding");
-  const tools = events.filter((event): event is ToolResultEvent => event.type === "tool_result");
-  const failedTools = tools.filter((tool) => !tool.passed);
-  const blockingTools = failedTools.filter((tool) => tool.blocking !== false);
-  const complete = [...events].reverse().find((event) => event.type === "complete");
-  const errors = events.filter((event) => event.type === "error");
+  const { findings, tools, failedTools, blockingTools, complete, errors } = analyzeAgentEvents(events);
   const counts = Object.fromEntries(severities.map((severity) => [severity, findings.filter((finding) => finding.severity === severity).length]));
 
   const lines = ["CRX JSONL summary"];
@@ -18,7 +13,7 @@ export function summarizeAgentJsonl(input: string): string {
   if (complete?.type === "complete") lines.push(`Complete: ${complete.summary}`);
   if (errors.length) lines.push(`Errors: ${errors.map((event) => event.message).join("; ")}`);
 
-  const blockingFindings = findings.filter((finding) => finding.severity === "critical" || finding.severity === "major");
+  const blockingFindings = findings.filter(isBlockingFinding);
   if (blockingFindings.length) {
     lines.push("");
     lines.push("Blocking findings:");
@@ -34,6 +29,16 @@ export function summarizeAgentJsonl(input: string): string {
   return `${lines.join("\n")}\n`;
 }
 
+export function agentJsonlExitCode(input: string): number {
+  const events = parseAgentJsonl(input);
+  const { findings, tools, blockingTools, complete, errors } = analyzeAgentEvents(events);
+  const blockingFindings = findings.filter(isBlockingFinding);
+  if (errors.length) return 1;
+  if (blockingFindings.length || blockingTools.length) return 3;
+  if (complete?.type === "complete" && complete.needsRerun) return 4;
+  return 0;
+}
+
 export function parseAgentJsonl(input: string): AgentEvent[] {
   return input
     .split(/\r?\n/)
@@ -46,6 +51,20 @@ export function parseAgentJsonl(input: string): AgentEvent[] {
         throw new Error(`Invalid JSONL on line ${index + 1}: ${err instanceof Error ? err.message : String(err)}`);
       }
     });
+}
+
+function analyzeAgentEvents(events: AgentEvent[]) {
+  const findings = events.filter((event): event is Finding => event.type === "finding");
+  const tools = events.filter((event): event is ToolResultEvent => event.type === "tool_result");
+  const failedTools = tools.filter((tool) => !tool.passed);
+  const blockingTools = failedTools.filter((tool) => tool.blocking !== false);
+  const complete = [...events].reverse().find((event) => event.type === "complete");
+  const errors = events.filter((event) => event.type === "error");
+  return { findings, tools, failedTools, blockingTools, complete, errors };
+}
+
+function isBlockingFinding(finding: Finding): boolean {
+  return finding.severity === "critical" || finding.severity === "major";
 }
 
 function location(finding: Finding): string {
