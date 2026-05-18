@@ -30,6 +30,6 @@ test("renderTuiSummary shows counts and review context", () => {
 });
 
 test("renderAutoFixResult marks applied and skipped fixes", () => {
-  assert.equal(renderAutoFixResult({ applied: true, summary: "Applied." }), "✓ Auto-fix: Applied.");
+  assert.equal(renderAutoFixResult({ applied: true, summary: "Applied." }), "✓ Auto-fix: Applied. Rerun crx review before treating the gate as passed.");
   assert.equal(renderAutoFixResult({ applied: false, summary: "No patch." }), "! Auto-fix: No patch.");
 });

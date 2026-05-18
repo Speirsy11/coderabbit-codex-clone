@@ -1,9 +1,15 @@
+import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import type { AgentEvent, Finding } from "./types.js";
 
 const order = ["critical", "major", "minor", "trivial", "info"] as const;
 
 export function formatJsonl(events: AgentEvent[]): string {
-  return events.map((event) => JSON.stringify(event)).join("\n") + "\n";
+  return events.map((event) => JSON.stringify(withProtocol(event))).join("\n") + "\n";
+}
+
+function withProtocol(event: AgentEvent): AgentEvent {
+  if ("protocolVersion" in event && "schemaVersion" in event) return event;
+  return { ...event, protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION } as AgentEvent;
 }
 
 export function formatPlain(findings: Finding[], context: { truncated: boolean; diffBytes: number }): string {

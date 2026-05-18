@@ -34,11 +34,11 @@ crx auth status
 crx config init
 ```
 
-`--plain` is the default. `--agent` emits JSONL with one event per line: `review_context`, `status`, `finding`, `autofix`, `complete`, and `error`.
+`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `finding`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes.
 
 `--tui`/`--interactive` opens a lightweight terminal UI with a spinner, severity counts, grouped findings, and an optional prompt to apply Codex-generated fixes for blocking findings.
 
-`--fix` enables auto-fix mode without prompting. After the review, `crx` asks Codex for a minimal unified diff patch for the findings, verifies it with `git apply --check`, and applies it with `git apply` only if the patch is valid. Review the resulting local diff before committing.
+`--fix` enables auto-fix mode without prompting. After the review, `crx` asks Codex for a minimal unified diff patch for the findings, verifies it with `git apply --check`, and applies it with `git apply` only if the patch is valid. A successful apply exits `4` and reports `needsRerun: true`; rerun the review before treating the gate as passed. Review the resulting local diff before committing.
 
 ## Agent Loop
 
@@ -48,7 +48,7 @@ Recommended loop:
 2. Run `crx --agent`.
 3. Wait quietly. Codex-backed reviews can take several minutes.
 4. Fix only `critical` and `major` findings, or run `crx --fix` for a first-pass Codex patch.
-5. Review the local diff and rerun once.
+5. If `--fix` exits `4`, review the local diff and rerun once.
 6. After the second pass, ignore nits unless they expose real production risk.
 
 ## What it looks like
@@ -90,7 +90,7 @@ Apply Codex auto-fix for critical/major findings? [y/N] y
 ✓ Auto-fix: Applied Codex-generated patch.
 ```
 
-The local diff now looks like:
+The command exits `4` because a patch was applied and review must be rerun. The local diff now looks like:
 
 ```diff
  export function label(user?: { name: string }) {
@@ -109,7 +109,7 @@ crx --fix -t uncommitted
 
 `crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. Review prompts are sent to Codex over stdin rather than process argv. Extra instruction files must stay inside the repo and symlinks are rejected. Auto-fix mode applies only patches that pass `git apply --check`, but you should still inspect the resulting diff before committing.
 
-If the diff exceeds `--max-diff-bytes`, it is truncated and the truncation is reported in plain and JSONL output.
+For `all` and `uncommitted` reviews, small untracked text files are included in the review input. Large, binary, unreadable, and non-file untracked paths are skipped and reported in JSONL context/warning events. If the diff exceeds `--max-diff-bytes`, it is truncated and the truncation is reported in plain and JSONL output.
 
 ## Limitations
 

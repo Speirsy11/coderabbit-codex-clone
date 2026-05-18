@@ -7,6 +7,7 @@ import { CONFIG_NAME, initConfig, loadConfig } from "./config.js";
 import { formatJsonl, formatPlain } from "./format.js";
 import { assertGitRepo, collectDiff } from "./git.js";
 import { parseCodexFindings } from "./parser.js";
+import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
@@ -18,9 +19,13 @@ async function main(): Promise<number> {
   const args = process.argv.slice(2);
   const command = args[0] && !args[0].startsWith("-") ? args.shift()! : "review";
   try {
-    if (command === "review") return review(args);
-    if (command === "auth" && args[0] === "status") return authStatus();
-    if (command === "config" && args[0] === "init") return configInit(args.slice(1));
+    if ((command === "review" && (args[0] === "--help" || args[0] === "-h")) || command === "--help" || command === "-h") {
+      printHelp();
+      return 0;
+    }
+    if (command === "review") return await review(args);
+    if (command === "auth" && args[0] === "status") return await authStatus();
+    if (command === "config" && args[0] === "init") return await configInit(args.slice(1));
     if (command === "help" || command === "--help" || command === "-h") {
       printHelp();
       return 0;
@@ -33,16 +38,20 @@ async function main(): Promise<number> {
 }
 
 async function review(args: string[]): Promise<number> {
+  if (args.includes("--help") || args.includes("-h")) {
+    printHelp();
+    return 0;
+  }
   const options = parseReviewArgs(args);
-  const tui = new ReviewTui(options.mode === "interactive");
+  const tui = new ReviewTui(options.mode === "interactive", options.mode !== "agent");
   const repoDir = await assertGitRepo(options.dir);
   options.dir = repoDir;
   const config = await loadConfig(repoDir);
   options.maxDiffBytes = options.maxDiffBytes || config.maxDiffBytes || DEFAULT_MAX_DIFF_BYTES;
   const events: AgentEvent[] = [];
   try {
-    events.push({ type: "status", message: "Collecting Git diff." });
-    tui.start("Collecting Git diff");
+    events.push(statusEvent("Collecting Git diff."));
+    if (options.mode !== "agent") tui.start("Collecting Git diff");
     const collected = await collectDiff(options);
     const redactedDiff = redactSecrets(collected.diff);
     const context = {
@@ -53,11 +62,16 @@ async function review(args: string[]): Promise<number> {
       baseCommit: options.baseCommit,
       diffBytes: collected.bytes,
       truncated: collected.truncated,
-      configFiles: options.configFiles
+      configFiles: options.configFiles,
+      untrackedFiles: collected.untrackedFiles,
+      skippedUntrackedFiles: collected.skippedUntrackedFiles
     };
     events.push(context);
-    events.push({ type: "status", message: "Running Codex review." });
-    tui.status("Running Codex review");
+    if (collected.skippedUntrackedFiles.length) {
+      events.push(warningEvent("Some untracked files were skipped because they were too large, binary, or unreadable.", collected.skippedUntrackedFiles));
+    }
+    events.push(statusEvent("Running Codex review."));
+    if (options.mode !== "agent") tui.status("Running Codex review");
     const configText = await readInstructionFiles(options.configFiles, repoDir);
     const prompt = buildReviewPrompt({ options, diff: redactedDiff, truncated: collected.truncated, configText, config });
     const codexOutput = await runCodexExec(prompt, config, repoDir);
@@ -68,22 +82,22 @@ async function review(args: string[]): Promise<number> {
 
     let autoFixApplied = false;
     if (findings.length && (options.fix || (options.mode === "interactive" && (await askAutoFix(findings, false))))) {
-      events.push({ type: "status", message: "Generating Codex auto-fix patch." });
-      tui.status("Generating Codex auto-fix patch");
+      events.push(statusEvent("Generating Codex auto-fix patch."));
+      if (options.mode !== "agent") tui.status("Generating Codex auto-fix patch");
       const fixPrompt = buildAutoFixPrompt({ findings, diff: redactedDiff, truncated: collected.truncated, config });
       const fixOutput = await runCodexExec(fixPrompt, config, repoDir);
       const patch = extractUnifiedDiff(fixOutput);
       const result = await applyPatch(repoDir, patch);
       autoFixApplied = result.applied;
-      events.push({ type: "autofix", applied: result.applied, summary: result.summary });
+      events.push({ type: "autofix", applied: result.applied, summary: result.summary, needsRerun: result.applied, rerunCommand: result.applied ? buildRerunCommand(options) : undefined });
       if (options.mode !== "agent") process.stdout.write(`${renderAutoFixResult(result)}\n`);
     }
 
-    events.push({ type: "complete", findingsCount: findings.length, summary: `${findings.length} finding(s).`, autoFixApplied });
+    events.push({ type: "complete", findingsCount: findings.length, summary: `${findings.length} finding(s).`, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
     if (options.mode === "agent") process.stdout.write(formatJsonl(events));
-    return autoFixApplied ? 0 : hasBlockingFindings(findings) ? 3 : 0;
+    return autoFixApplied ? 4 : hasBlockingFindings(findings) ? 3 : 0;
   } catch (err) {
-    const errorEvent = { type: "error" as const, message: err instanceof Error ? err.message : String(err) };
+    const errorEvent = { type: "error" as const, protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, message: err instanceof Error ? err.message : String(err) };
     tui.stop();
     if (options.mode === "agent") process.stdout.write(formatJsonl([...events, errorEvent]));
     else console.error(`Review failed: ${errorEvent.message}`);
@@ -176,6 +190,22 @@ function valueAfter(args: string[], flag: string): string | undefined {
   return i >= 0 ? args[i + 1] : undefined;
 }
 
+function statusEvent(message: string): AgentEvent {
+  return { type: "status", protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, message };
+}
+
+function warningEvent(message: string, files?: string[]): AgentEvent {
+  return { type: "warning", protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, message, files };
+}
+
+function buildRerunCommand(options: ReviewOptions): string {
+  const parts = ["crx", "review", "--agent", "--type", options.type];
+  if (options.base) parts.push("--base", options.base);
+  if (options.baseCommit) parts.push("--base-commit", options.baseCommit);
+  for (const file of options.configFiles) parts.push("--config", file);
+  return parts.join(" ");
+}
+
 function hasBlockingFindings(findings: { severity: string }[]): boolean {
   return findings.some((f) => f.severity === "critical" || f.severity === "major");
 }
@@ -194,6 +224,9 @@ Options:
   --max-diff-bytes <n>      Maximum diff bytes sent to Codex
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
+
+Exit codes:
+  0 no blocking findings; 1 command/review failure; 3 blocking findings; 4 auto-fix applied, rerun required
 
 Config: ${CONFIG_NAME}`);
 }

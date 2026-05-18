@@ -1,0 +1,308 @@
+# Current Capability Audit
+
+Date: 2026-05-18
+Repository: `coderabbit-codex-clone`
+Head: `1ee0264 feat: add TUI and autofix mode`
+
+## Executive summary
+
+`crx` is a compact, working TypeScript CLI that can collect a local Git diff, redact likely secrets, send a structured review prompt to the user's Codex CLI subscription, parse returned findings, and emit either human-readable output or JSONL events for agents. Recent work added a lightweight TUI summary and an opt-in Codex-generated auto-fix path that validates patches with `git apply --check` before applying them.
+
+The project is useful as an experimental local reviewer today, but it is not yet a dependable agent-run quality gate after each change set. The main blockers are missing end-to-end CLI tests, brittle error handling around async command failures, weak JSONL/exit-code guarantees for auto-fix loops, shallow review scoping, and lack of a deterministic review fixture/mocking story for agents.
+
+Production-readiness score: **5.5 / 10**.
+
+## Implemented capabilities
+
+### CLI commands and modes
+
+- Binary: `crx` via `dist/cli.js`.
+- Default command: `crx` / `crx review`.
+- Supported commands:
+  - `crx review`
+  - `crx auth status`
+  - `crx config init`
+  - `crx help`, `crx -h`, `crx --help` as top-level commands only.
+- Review output modes:
+  - `--plain` default human format.
+  - `--agent` JSONL events on stdout.
+  - `--tui` / `--interactive` terminal summary with spinner and optional auto-fix prompt.
+- Review selectors:
+  - `-t/--type all|committed|uncommitted`
+  - `--base <branch>`
+  - `--base-commit <sha>`
+  - `--dir <repo>`
+  - `-c/--config <files...>`
+  - `--max-diff-bytes <n>`
+
+### Git diff collection
+
+- Verifies the target directory is a Git repo with `git rev-parse --show-toplevel`.
+- Uses `spawn(..., { shell: false })` for Git execution.
+- Builds diffs for committed, uncommitted, all, base branch, and base commit modes.
+- Has fallback handling for root commits.
+- Avoids treating shallow non-root clones as root commits.
+- Truncates large diffs and appends `[CRX_DIFF_TRUNCATED ...]` marker.
+
+### Prompting and Codex integration
+
+- Uses `npx -y @openai/codex` by default.
+- Allows `CRX_CODEX_COMMAND` override.
+- Honors repo-local `codexCommand` only when `CRX_TRUST_REPO_CODEX_COMMAND=1` is set.
+- Sends prompts over stdin using `codex exec -`.
+- Has a 30-minute timeout for reviews and 2-minute timeout for auth checks.
+- Review prompt asks for strict JSON with severity, file, line, impact, and fix instructions.
+
+### Parsing and output
+
+- Recovers JSON from raw output, fenced JSON, embedded arrays, or embedded objects.
+- Validates findings defensively and defaults unknown severities to `info`.
+- Plain output groups findings by severity and includes impact/fix text.
+- JSONL output supports these event types:
+  - `review_context`
+  - `status`
+  - `finding`
+  - `autofix`
+  - `complete`
+  - `error`
+- Exit code contract currently implemented:
+  - `0` when no blocking findings, or when auto-fix applied.
+  - `1` on review/command failure.
+  - `3` when critical/major findings remain and no auto-fix was applied.
+
+### Secret and config-file safety
+
+- Redacts likely private keys, dotenv secret assignments, common OpenAI/GitHub/Slack/AWS token forms.
+- Runs child processes without shell interpolation.
+- Rejects extra instruction files that:
+  - are outside the repo lexically,
+  - resolve outside the real repo path,
+  - are symlinks,
+  - are directories/non-files,
+  - exceed 50 KB.
+
+### TUI and auto-fix
+
+- `--tui` renders a spinner, boxed title, repo/review context, severity counts, and the plain report.
+- Interactive TUI prompts to apply fixes only when at least one critical/major finding exists.
+- `--fix` enables non-interactive auto-fix.
+- Auto-fix prompt targets critical/major findings first, falls back to all findings if no blocking findings exist.
+- Extracts unified diffs from raw or fenced Codex output.
+- Applies patches only after `git apply --check` succeeds.
+
+### Tests present
+
+There are focused Node test files for:
+
+- auto-fix prompt/diff extraction/patch application,
+- command splitting and Codex command resolution,
+- config init/load,
+- plain and JSONL formatting,
+- Git diff arg construction,
+- root commit and shallow clone diff behavior,
+- Codex JSON parsing/recovery,
+- secret redaction,
+- TUI summary and auto-fix result rendering.
+
+## Verification performed
+
+Commands run locally on 2026-05-18:
+
+```bash
+npm test
+```
+
+Result: **pass** — 23 tests passed, 0 failed.
+
+```bash
+npm run build
+```
+
+Result: **pass** — TypeScript build completed with `tsc -p tsconfig.json`.
+
+```bash
+node dist/cli.js help
+```
+
+Result: **pass** — printed help and exited `0`.
+
+```bash
+CRX_CODEX_COMMAND="node /tmp/fake-codex.js" node dist/cli.js review --agent -t uncommitted --max-diff-bytes 1000
+```
+
+Result: **pass** — emitted valid JSONL on stdout and exited `0` with a mocked empty findings response.
+
+One negative CLI check also exposed a bug:
+
+```bash
+node dist/cli.js --help
+node dist/cli.js review --bad-option
+```
+
+Result: both exited `1`, but printed uncaught stack traces instead of controlled `crx:` errors. `crx --help` is documented as a usage form but is currently parsed as a review option and fails.
+
+## Gaps and risks
+
+### 1. Async CLI errors bypass the intended top-level handler
+
+`main()` returns `review(args)` without `await`, so errors thrown/rejected inside `review()` before its internal `try` are not caught by the top-level `try/catch`. Examples observed:
+
+- `node dist/cli.js --help`
+- `node dist/cli.js review --bad-option`
+
+Both print raw stack traces. This is especially bad for agent use because failures become noisy and less parseable.
+
+### 2. Help handling is inconsistent
+
+Top-level `crx help` works, but `crx --help` currently fails because the default command becomes `review` and `--help` is treated as an unknown review option. The README usage implies `crx` should be friendly as a CLI; this is a rough first-run experience.
+
+### 3. Agent mode is parseable on stdout, but stderr is noisy
+
+A mocked `--agent` run produced JSONL on stdout, but also emitted progress lines to stderr:
+
+```text
+crx: Collecting Git diff
+crx: Running Codex review
+```
+
+This is not fatal if agents parse stdout only, but it weakens the “quiet quality gate” behavior. Decide whether stderr status is part of the contract or suppress it in `--agent` mode.
+
+### 4. Auto-fix exit semantics are too optimistic
+
+The CLI exits `0` whenever an auto-fix patch is applied, even though it has not rerun the review or checked whether blocking findings are actually resolved. As a quality gate, “patch applied” is not equivalent to “gate passed.”
+
+Recommended gate semantics: after applying a fix, return a distinct code or require/rerun review before success. At minimum, the `complete` event should make `needsRerun: true` explicit.
+
+### 5. Auto-fix mutates the worktree without dirty-state guardrails
+
+`--fix` can apply a patch into an already dirty worktree. It uses `git apply --check`, which protects patch validity, but not user intent or unrelated pending changes. For agent loops, this increases the chance of mixing review fixes with unrelated edits.
+
+Useful guardrails:
+
+- include pre/post worktree status events,
+- require clean index or document that dirty worktrees are allowed,
+- emit changed file list after patch application,
+- consider `git apply --index` or a dry-run mode depending on workflow.
+
+### 6. Diff coverage has important blind spots
+
+`git diff HEAD` does not include untracked files. That means a newly created but untracked file can be invisible to `crx`. This is a major issue for an after-change-set quality gate unless the agent always stages files first.
+
+Also, `all` and `uncommitted` are effectively the same when `HEAD` exists. If that is intentional, docs should say so; if not, clarify whether `all` means staged + unstaged + untracked or branch diff.
+
+### 7. Base branch behavior is brittle in fresh/local repos
+
+`--base main` uses `main...HEAD`, which fails if the merge base is missing or the branch is not fetched. There is no friendly remediation message. This is common in shallow clones and agent sandboxes.
+
+### 8. JSON schema is informal
+
+The parser is defensive, but there is no exported schema/version for agent events. For a reliable agent quality gate, consumers need a stable contract, version, and examples for every event type and exit code.
+
+### 9. No end-to-end CLI test harness
+
+Tests cover core modules, but not full CLI process behavior, stdout/stderr split, exit codes, invalid arguments, mocked Codex review, mocked blocking findings, or auto-fix with a mocked Codex patch.
+
+This is the biggest confidence gap because the intended product is a CLI invoked by agents.
+
+### 10. Docs are partly stale after auto-fix work
+
+`docs/architecture.md` still says: “The CLI does not apply patches or mutate reviewed code.” That is no longer true after `--fix` and interactive auto-fix. It also lists exit code `2` for unsupported interactive mode, but interactive mode is now implemented and no code path appears to return `2`.
+
+### 11. TUI is a presentational wrapper, not a full interactive workflow
+
+The TUI is useful but minimal. It does not support navigation, collapsing groups, selecting individual findings, previewing patches, or confirming the exact patch before application. That is fine for now, but it should be described as “lightweight TUI summary,” not a rich review UI.
+
+### 12. Live Codex behavior is not covered by tests
+
+The Codex dependency is intentionally external, but there is no fixture for malformed output, timeout behavior, auth failure wording, or model returning a patch that partially applies. Mocking `CRX_CODEX_COMMAND` is enough to build these tests without live Codex.
+
+## Production-readiness score
+
+**5.5 / 10**
+
+Why not lower:
+
+- The core architecture is simple and mostly safe.
+- Risky surfaces have some focused tests.
+- Secret redaction and config-file boundaries are considered.
+- JSONL output and exit codes already make basic agent usage possible.
+- Auto-fix validates patches before applying them.
+
+Why not higher:
+
+- CLI process behavior is under-tested and already has visible stack-trace bugs.
+- `--fix` can report success without proving the gate is clean.
+- Untracked files are invisible.
+- Docs and implemented behavior have drifted.
+- Agent-mode contract needs to be stricter before depending on it after every change set.
+
+## Recommended first development slice
+
+Goal: make `crx --agent` safe and dependable as an agent-run quality gate after each change set, before improving review intelligence or TUI polish.
+
+### Slice: “Agent gate hardening v0.2”
+
+Implement the smallest set of changes that lets an agent run `crx --agent` after edits and make a deterministic pass/fail decision.
+
+#### Scope
+
+1. **Fix CLI error handling and help**
+   - Await `review(args)` inside `main()` or otherwise catch rejected promises.
+   - Make `crx --help`, `crx review --help`, and invalid options return controlled output without stack traces.
+   - Add tests for invalid args and help exit codes.
+
+2. **Define and test the JSONL contract**
+   - Add `docs/agent-contract.md` with event schema, examples, stdout/stderr expectations, and exit codes.
+   - Add a `schemaVersion` or `protocolVersion` to `review_context` or all events.
+   - Ensure `--agent` stdout is JSONL only.
+
+3. **Add E2E CLI tests with mocked Codex**
+   - Mock zero findings => exit `0`.
+   - Mock major finding => exit `3` and finding event present.
+   - Mock invalid JSON => exit `1` and error event present.
+   - Mock `--fix` patch applied => autofix event present and explicit rerun-needed state.
+   - Invalid option => exit `1`, no raw stack trace.
+
+4. **Handle untracked files explicitly**
+   - Either include untracked files in review input or emit a warning/event listing untracked files skipped.
+   - For a quality gate, prefer including untracked text files up to a safe size limit.
+
+5. **Clarify auto-fix gate semantics**
+   - Do not treat “patch applied” as a clean pass.
+   - Emit `needsRerun: true` after any applied patch.
+   - Consider returning a distinct exit code after auto-fix, or keep `0` only if no blocking findings were present before fixing.
+
+6. **Update stale docs**
+   - Refresh `docs/architecture.md` to mention auto-fix mutation behavior and current exit codes.
+   - Align README/help around TUI and `--fix` safety expectations.
+
+#### Acceptance checks
+
+- `npm test` passes.
+- `npm run build` passes.
+- New E2E tests verify stdout/stderr and exit codes.
+- `crx --help` exits `0`.
+- `crx review --bad-option` exits `1` without stack trace.
+- `CRX_CODEX_COMMAND=<mock> crx review --agent` emits JSONL-only stdout.
+- A mocked blocking finding reliably causes a non-zero gate result.
+- If auto-fix applies a patch, output clearly tells the agent to rerun before considering the gate passed.
+
+#### Why this slice first
+
+It improves the actual usage loop without needing better AI prompts or a richer UI. Once agents can trust invocation, parsing, and exit semantics, later work can improve finding quality, context collection, patch preview, or GitHub integration on a solid foundation.
+
+## 2026-05-18 update — Agent gate hardening v0.2
+
+Implemented from the recommended first slice:
+
+- Controlled async CLI errors and clean help handling for `crx --help` / `crx review --help`.
+- Versioned agent JSONL protocol (`protocolVersion: 0.2`, `schemaVersion: crx.agent.v0.2`) documented in `docs/agent-contract.md`.
+- E2E CLI harness with mocked Codex for success, blocking findings, invalid JSON, invalid args, and auto-fix.
+- Agent mode now keeps normal progress off stderr and emits parseable JSONL on stdout.
+- Small untracked text files are included in `all`/`uncommitted` review input; skipped untracked paths are reported.
+- Auto-fix patch application exits `4` with `needsRerun: true` rather than implying the quality gate passed.
+- Architecture/README docs updated for current mutation and exit-code behavior.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining highest-impact P0 gap: Slice 2 review scope and instructions — path filters, glob-scoped path instructions, and auto-detected local guideline files.

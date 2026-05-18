@@ -11,7 +11,8 @@
 5. `src/prompt.ts` builds a strict JSON-only review prompt.
 6. `src/codex.ts` invokes `codex exec -` through the trusted Codex command and sends the review prompt over stdin.
 7. `src/parser.ts` extracts and validates findings from Codex output.
-8. `src/format.ts` renders human plain text or JSONL agent events.
+8. `src/format.ts` renders human plain text or versioned JSONL agent events.
+9. Optional auto-fix asks Codex for a unified diff and applies it only after `git apply --check` succeeds.
 
 ## Security Notes
 
@@ -22,11 +23,13 @@
 - Extra instruction files must resolve inside the repository, must be regular files, and symlinks are rejected.
 - Diffs are redacted before prompt construction.
 - Review prompts are passed via stdin rather than process arguments.
-- The CLI does not apply patches or mutate reviewed code.
+- Normal review mode is read-only. `--fix` and interactive auto-fix can mutate the worktree, but only after a generated unified diff passes `git apply --check`.
 
 ## Exit Codes
 
 - `0`: review ran and found no critical or major findings.
 - `1`: command or review failure.
-- `2`: unsupported interactive mode.
 - `3`: review ran and returned critical or major findings.
+- `4`: auto-fix applied a patch; rerun is required before the gate can pass.
+
+See [Agent JSONL Contract](./agent-contract.md) for event schemas and agent-loop semantics.

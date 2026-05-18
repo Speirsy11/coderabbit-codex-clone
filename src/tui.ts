@@ -11,15 +11,17 @@ export class ReviewTui {
   private frame = 0;
   private message = "Starting";
   private enabled: boolean;
+  private statusToStderr: boolean;
 
-  constructor(enabled = process.stdout.isTTY) {
+  constructor(enabled = process.stdout.isTTY, statusToStderr = true) {
     this.enabled = enabled;
+    this.statusToStderr = statusToStderr;
   }
 
   start(message: string): void {
     this.message = message;
     if (!this.enabled) {
-      console.error(`crx: ${message}`);
+      if (this.statusToStderr) console.error(`crx: ${message}`);
       return;
     }
     this.timer = setInterval(() => this.renderSpinner(), 80);
@@ -27,7 +29,7 @@ export class ReviewTui {
 
   status(message: string): void {
     this.message = message;
-    if (!this.enabled) console.error(`crx: ${message}`);
+    if (!this.enabled && this.statusToStderr) console.error(`crx: ${message}`);
   }
 
   stop(): void {
@@ -83,7 +85,8 @@ export async function askAutoFix(findings: Finding[], requested: boolean): Promi
 
 export function renderAutoFixResult(result: AutoFixResult): string {
   const icon = result.applied ? "✓" : "!";
-  return `${icon} Auto-fix: ${result.summary}`;
+  const rerun = result.applied ? " Rerun crx review before treating the gate as passed." : "";
+  return `${icon} Auto-fix: ${result.summary}${rerun}`;
 }
 
 function countBySeverity(findings: Finding[]): Record<Finding["severity"], number> {

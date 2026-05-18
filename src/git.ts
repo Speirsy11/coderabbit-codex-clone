@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { resolve } from "node:path";
+import { readFile, stat } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 import type { ReviewOptions, ReviewType } from "./types.js";
 
 export interface GitCommand {
@@ -26,31 +27,78 @@ export async function assertGitRepo(dir: string): Promise<string> {
   return result.stdout.trim();
 }
 
-export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number }> {
-  const diff = await collectDiffText(options);
+export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {
+  const diffResult = await collectDiffText(options);
+  const diff = diffResult.diff;
   const bytes = Buffer.byteLength(diff, "utf8");
-  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes };
+  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles };
   const truncated = Buffer.from(diff, "utf8").subarray(0, options.maxDiffBytes).toString("utf8");
-  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes };
+  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles };
 }
 
-async function collectDiffText(options: ReviewOptions): Promise<string> {
+async function collectDiffText(options: ReviewOptions): Promise<{ diff: string; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {
   const command = buildDiffCommand(options);
   const result = await runGit(command.args, options.dir);
-  if (result.code === 0) return result.stdout;
+  if (result.code === 0) return appendUntracked(options, result.stdout);
 
   if (!options.base && !options.baseCommit && options.type === "committed" && (await isRootCommit(options.dir))) {
     const rootCommit = await runGit(["show", "--format=", "--no-ext-diff", "--no-color", "HEAD"], options.dir);
-    if (rootCommit.code === 0) return rootCommit.stdout;
+    if (rootCommit.code === 0) return appendUntracked(options, rootCommit.stdout);
   }
 
   if (!options.base && !options.baseCommit && (options.type === "all" || options.type === "uncommitted")) {
     const staged = await runGit(["diff", "--cached", "--no-ext-diff", "--no-color"], options.dir);
     const unstaged = await runGit(["diff", "--no-ext-diff", "--no-color"], options.dir);
-    if (staged.code === 0 && unstaged.code === 0) return [staged.stdout, unstaged.stdout].filter(Boolean).join("\n");
+    if (staged.code === 0 && unstaged.code === 0) return appendUntracked(options, [staged.stdout, unstaged.stdout].filter(Boolean).join("\n"));
   }
 
   throw new Error(result.stderr || "git diff failed");
+}
+
+async function appendUntracked(options: ReviewOptions, diff: string): Promise<{ diff: string; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {
+  if (options.type === "committed" || options.base || options.baseCommit) return { diff, untrackedFiles: [], skippedUntrackedFiles: [] };
+  const result = await runGit(["ls-files", "--others", "--exclude-standard", "-z"], options.dir);
+  if (result.code !== 0 || !result.stdout) return { diff, untrackedFiles: [], skippedUntrackedFiles: [] };
+
+  const included: string[] = [];
+  const skipped: string[] = [];
+  const chunks: string[] = [];
+  for (const file of result.stdout.split("\0").filter(Boolean)) {
+    const path = resolve(options.dir, file);
+    const rel = relative(options.dir, path);
+    if (rel.startsWith("..")) {
+      skipped.push(file);
+      continue;
+    }
+    try {
+      const info = await stat(path);
+      if (!info.isFile() || info.size > 50000) {
+        skipped.push(file);
+        continue;
+      }
+      const content = await readFile(path);
+      if (content.includes(0)) {
+        skipped.push(file);
+        continue;
+      }
+      const text = content.toString("utf8");
+      if (text.includes("�")) {
+        skipped.push(file);
+        continue;
+      }
+      included.push(file);
+      chunks.push(renderUntrackedFile(file, text));
+    } catch {
+      skipped.push(file);
+    }
+  }
+  const untrackedDiff = chunks.join("\n");
+  return { diff: [diff, untrackedDiff].filter(Boolean).join("\n"), untrackedFiles: included, skippedUntrackedFiles: skipped };
+}
+
+function renderUntrackedFile(file: string, content: string): string {
+  const body = content.split(/\r?\n/).map((line) => `+${line}`).join("\n");
+  return `diff --git a/${file} b/${file}\nnew file mode 100644\n--- /dev/null\n+++ b/${file}\n@@ -0,0 +1,${content.split(/\r?\n/).length} @@\n${body}\n`;
 }
 
 async function isRootCommit(cwd: string): Promise<boolean> {
