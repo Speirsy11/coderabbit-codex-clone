@@ -686,3 +686,32 @@ This closes part of the CodeRabbit autofix verification gap for local workflows.
 ### Next recommended slice
 
 Add docs/examples for Git hook or pre-push usage, or perform a final critical review and keep validating at clean push points until the 16:20 checkpoint.
+
+
+## 2026-05-18 15:12 BST — Loop 20: Review context and post-fix verification metadata
+
+### Development completed
+
+- Added exact reviewed-file metadata to `review_context`: `changedFiles`, `changedFilesCount`, `reviewedFilesCount`, and `excludedFilesCount`, computed before diff truncation.
+- Added `tool_result.phase` with `pre_review` and `post_autofix` values.
+- Added `crx review --fix --verify-fix` to rerun configured `localTools` after an applied patch while still exiting `4` to require a full rerun.
+- Updated agent contract docs, JSON schema, README safety notes, runtime validation, and E2E coverage.
+
+### Validation
+
+- `npm test` — pass, 75 tests.
+- `npm run build` — pass.
+- `node dist/cli.js --help` — pass and shows `--verify-fix`.
+- `node dist/cli.js config validate --json` — pass.
+
+### Production-readiness score
+
+**9.35 / 10**. CI artifacts now say exactly which files were reviewed versus filtered, and auto-fix runs can optionally get immediate deterministic post-patch tool feedback without weakening the required rerun gate.
+
+### CodeRabbit comparison
+
+This closes the local subset of CodeRabbit-style autofix verification and improves review artifact traceability for agent-run CI gates. Hosted PR comments, dashboards, organization learnings, cross-repo context, and managed cloud execution remain intentionally out of scope.
+
+### Next recommended slice
+
+Consider a Git hook recipe or small history/metrics artifact only if another safe polish slice is needed; otherwise keep validating the now-complete local/CI quality-gate wedge.

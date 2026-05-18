@@ -9,7 +9,7 @@ For our goal — **agent-run local/CI code quality review after each change set*
 1. **Hosted review UX:** PR comments, incremental hosted reviews, dashboards, and team analytics are still intentionally out of scope for the local clone.
 2. **Richer configuration import:** only the safe local subset of `.coderabbit.yaml` is mapped; hosted auto-review and managed tool settings are documented but not executed.
 3. **Advanced context:** organization learnings, issue/PR history, MCP context, cross-repo analysis, and AST-grep instruction ecosystems remain deferred.
-4. **Optional polish:** post-fix verification hooks, Git hook examples, and history/metrics artifacts would improve ergonomics but are no longer blockers for local/CI quality gates.
+4. **Optional polish:** Git hook examples and history/metrics artifacts would improve ergonomics but are no longer blockers for local/CI quality gates.
 
 The previous must-have wedge — **change-set scoped `crx --agent` in CI + path filters/instructions + stable JSONL schema + exit-code gate + second-pass agent loop docs** — is implemented. Future slices should avoid redoing that foundation and focus only on the remaining optional/hosted parity gaps above.
 
@@ -17,7 +17,7 @@ The previous must-have wedge — **change-set scoped `crx --agent` in CI + path 
 
 - **Implemented local/CI core:** `review --agent`, stable JSONL schema/docs, exit codes `0`/`1`/`3`/`4`, config validation, local tool checks, artifact summaries, SARIF/JUnit export, and CI helper scripts.
 - **Implemented scope/config subset:** path filters, path instructions, common guideline auto-loading, custom guideline patterns, `chill`/`assertive` review profiles, presets for Node/Python/Ruby, and safe `.coderabbit.yaml`/`.coderabbit.yml` fallback mapping.
-- **Implemented agent-loop support:** bounded second-pass helper, auto-fix rerun signaling, blocker counts, config-source metadata, and no-auth fixture coverage for CI artifacts.
+- **Implemented agent-loop support:** bounded second-pass helper, auto-fix rerun signaling, post-fix local-tool verification, exact changed-file context metadata, blocker counts, config-source metadata, and no-auth fixture coverage for CI artifacts.
 - **Deferred by design:** hosted PR bot behavior, dashboards, CodeRabbit API compatibility, organization learnings, MCP/cross-repo context, and fully managed sandboxed tool execution.
 
 ## Priority legend
@@ -62,7 +62,7 @@ The previous must-have wedge — **change-set scoped `crx --agent` in CI + path 
 | Multi-repo/context | Cross-repo analysis, issue tracker context, PR history | Knowledge base overview describes multi-repo, linked issues, and PR context. <https://docs.coderabbit.ai/knowledge-base/index.md> | P2 | Later | Not needed for first local/CI quality gate. |
 | MCP integration | CodeRabbit acts as MCP client for external context | MCP docs describe CodeRabbit ingesting data from MCP servers for review/chat. <https://docs.coderabbit.ai/integrations/mcp-servers.md> | P2 | Later | Interesting for enterprise parity, but not MVP. |
 | Finishing touches | Autofix unresolved review findings in PRs | Autofix docs apply fixes from unresolved CodeRabbit review threads and deliver commit/stacked PR. <https://docs.coderabbit.ai/finishing-touches/autofix.md> | P2 | Later | `crx --fix` can remain local-only; do not implement PR thread workflows yet. |
-| Finishing touches | Autofix verification step | Autofix docs say generated fixes run setup/build verification and still deliver changes if verification fails. <https://docs.coderabbit.ai/finishing-touches/autofix.md> | P1 | Later | Add optional post-fix verify command for local/CI once fix mode stabilizes. |
+| Finishing touches | Autofix verification step | Autofix docs say generated fixes run setup/build verification and still deliver changes if verification fails. <https://docs.coderabbit.ai/finishing-touches/autofix.md> | P1 | Implemented local subset | `--verify-fix` reruns configured localTools after an applied patch and marks those `tool_result` events as `post_autofix`; hosted PR delivery remains out of scope. |
 | Auth/billing | Browser OAuth and Agentic API key | CLI docs cover `cr auth login`, API-key usage, credits, and rate limits. <https://docs.coderabbit.ai/cli/index.md> | P2 | Later | Not applicable: `crx` uses local Codex subscription auth and should keep no CodeRabbit dependency. |
 | Self-hosted | CLI/IDE can connect to self-hosted CodeRabbit | Docs list self-hosted CLI/IDE pages in llms index. <https://docs.coderabbit.ai/llms.txt> | P2 | Later | Out of scope; `crx` is local-first, not a CodeRabbit client. |
 | Dashboard/metrics | IDE/CLI review metrics and dashboards | llms index lists dashboard metrics pages. <https://docs.coderabbit.ai/llms.txt> | P2 | Later | For local use, a JSON artifact/history file is enough if needed. |
