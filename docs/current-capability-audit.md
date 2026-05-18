@@ -306,3 +306,26 @@ Implemented from the recommended first slice:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining highest-impact P0 gap: Slice 2 review scope and instructions — path filters, glob-scoped path instructions, and auto-detected local guideline files.
+
+## Update: Agent gate hardening v0.2 (2026-05-18 14:25 BST)
+
+Implemented since the initial audit:
+
+- Top-level async CLI failures are now awaited by `main()`, so invalid options and rejected review setup errors produce controlled `crx:` messages instead of stack traces.
+- `crx --help` and `crx review --help` exit `0` and print usage.
+- `--agent` stdout is covered by E2E tests and remains JSONL-only; normal progress is quiet on stderr in agent mode.
+- Agent events carry `protocolVersion: "0.2"` and `schemaVersion: "crx.agent.v0.2"`.
+- `docs/agent-contract.md` defines event shapes, stdout/stderr expectations, exit codes, and the recommended loop.
+- Untracked small text files are included for `all` and `uncommitted` reviews; skipped untracked paths are reported in context/warning events.
+- Auto-fix no longer reports a clean gate after applying a patch. Applied fixes emit `needsRerun: true` and exit `4`.
+- E2E CLI tests now cover help, invalid options, zero findings, blocking findings, invalid Codex JSON, auto-fix rerun semantics, and untracked-file context.
+
+Current production-readiness score: **6.8 / 10**.
+
+Remaining high-impact gaps:
+
+1. Path filters and path-specific instructions are still missing, so review scope can be noisy on generated/dependency files.
+2. Agent contract examples are documented but there is not yet a machine-readable JSON Schema fixture.
+3. Base branch errors still need friendlier remediation for shallow/fresh clones.
+4. Auto-fix applies patches safely, but does not report changed files or pre/post worktree status.
+5. There is no packaged GitHub Actions quality-gate recipe yet.
