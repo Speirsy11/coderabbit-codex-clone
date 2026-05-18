@@ -18,9 +18,11 @@ test("agent event schema is valid JSON and tracks protocol version", async () =>
 
 test("GitHub Actions docs preserve review artifacts", async () => {
   const docs = await readFile(resolve(projectRoot, "docs/ci-quality-gate.md"), "utf8");
+  assert.match(docs, /crx config validate --json > crx-config\.json/);
   assert.match(docs, /crx-review\.jsonl/);
   assert.match(docs, /crx-review\.sarif/);
   assert.match(docs, /crx-review\.junit\.xml/);
+  assert.match(docs, /crx-config\.json/);
   assert.match(docs, /actions\/upload-artifact@v4/);
 });
 
@@ -35,9 +37,12 @@ test("CodeRabbit config mapping docs cover local equivalents", async () => {
   assert.match(docs, /crx\.config\.json.*wins/);
 });
 
-test("quality gate shell wrapper parses", () => {
+test("quality gate shell wrapper parses and validates config first", async () => {
+  const script = await readFile(resolve(projectRoot, "scripts/crx-quality-gate.sh"), "utf8");
   const result = spawnSync("bash", ["-n", "scripts/crx-quality-gate.sh"], { cwd: projectRoot, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
+  assert.match(script, /crx config validate --json > "\$config_out"/);
+  assert.match(script, /CRX_SKIP_CONFIG_VALIDATE/);
 });
 
 
