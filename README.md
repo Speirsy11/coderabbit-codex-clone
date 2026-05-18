@@ -44,7 +44,7 @@ crx config init --preset node|python|ruby
 
 ## CI Quality Gate
 
-For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable helpers are available at `scripts/crx-quality-gate.sh` for one-pass gating, `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop, and `scripts/crx-jsonl-summary.mjs` for compact CI summaries of JSONL artifacts, and `scripts/crx-jsonl-to-sarif.mjs` for SARIF export.
+For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable helpers are available at `scripts/crx-quality-gate.sh` for one-pass gating, `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop, `scripts/crx-jsonl-summary.mjs` for compact CI summaries, `scripts/crx-jsonl-to-sarif.mjs` for SARIF export, and `crx summarize --format junit` for JUnit reports.
 
 ## Agent Loop
 
