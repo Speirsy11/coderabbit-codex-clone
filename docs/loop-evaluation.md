@@ -412,3 +412,29 @@ Run a final validation/evaluation checkpoint, then continue with docs/artifact p
 ### Next recommended slice
 
 Add a small `.coderabbit.yaml`/CodeRabbit-concept mapping doc or importer for review profile, path filters, and instructions so teams migrating from CodeRabbit can bootstrap equivalent local `crx.config.json` settings quickly.
+
+
+## 2026-05-18 14:49 BST — Loop 13: CI artifact upload example lock v0.1
+
+### Development completed
+
+- Commit `af1d76f` expanded the GitHub Actions recipe to generate text, SARIF, and JUnit artifacts before applying the original review exit code.
+- Commit `ae3f4ec` added docs regression coverage so the CI example keeps uploading JSONL, SARIF, and JUnit artifacts.
+- The example now demonstrates preserving the quality-gate decision while still retaining artifacts for later inspection.
+
+### Validation
+
+- `npm test` — pass, 63 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.0 / 10**. CI adopters now have a more complete copy-paste path: review JSONL, concise text logs, code-scanning SARIF, and JUnit reports are all produced from the same run.
+
+### CodeRabbit comparison
+
+This closes more of the CI reporting gap for local/agent workflows. Remaining CodeRabbit differences are primarily hosted PR comments, managed dashboards, learnings, and richer configuration import/mapping.
+
+### Next recommended slice
+
+Implement or document a small `.coderabbit.yaml` concept mapping for review profile, path filters, path instructions, and guideline files.
