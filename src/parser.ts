@@ -1,6 +1,7 @@
-import type { Finding, Severity } from "./types.js";
+import type { Finding, FindingCategory, Severity } from "./types.js";
 
 const severities: Severity[] = ["critical", "major", "minor", "trivial", "info"];
+const categories: FindingCategory[] = ["potential_issue", "refactor_suggestion", "nitpick"];
 
 export function parseCodexFindings(output: string): Finding[] {
   const candidates = jsonCandidates(output);
@@ -45,6 +46,7 @@ function validateFinding(value: unknown): Finding | undefined {
   return {
     type: "finding",
     severity,
+    category: categories.includes(v.category as FindingCategory) ? (v.category as FindingCategory) : defaultCategory(severity),
     fileName,
     lineStart: numberValue(v.lineStart),
     lineEnd: numberValue(v.lineEnd),
@@ -62,4 +64,8 @@ function stringValue(value: unknown): string {
 
 function numberValue(value: unknown): number | undefined {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : undefined;
+}
+
+function defaultCategory(severity: Severity): FindingCategory {
+  return severity === "critical" || severity === "major" ? "potential_issue" : "nitpick";
 }

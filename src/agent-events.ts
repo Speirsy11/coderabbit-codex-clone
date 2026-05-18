@@ -33,6 +33,7 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       break;
     case "finding":
       requireOneOf(value, "severity", ["critical", "major", "minor", "trivial", "info"], errors);
+      optionalOneOf(value, "category", ["potential_issue", "refactor_suggestion", "nitpick"], errors);
       requireString(value, "fileName", errors);
       optionalPositiveInteger(value, "lineStart", errors);
       optionalPositiveInteger(value, "lineEnd", errors);
@@ -124,6 +125,11 @@ function requireStringArray(value: Record<string, unknown>, field: string, error
 
 function optionalStringArray(value: Record<string, unknown>, field: string, errors: string[]): void {
   if (value[field] !== undefined) requireStringArray(value, field, errors);
+}
+
+function optionalOneOf(value: Record<string, unknown>, field: string, allowed: string[], errors: string[]): void {
+  if (value[field] === undefined) return;
+  requireOneOf(value, field, allowed, errors);
 }
 
 function requireOneOf(value: Record<string, unknown>, field: string, allowed: string[], errors: string[]): void {

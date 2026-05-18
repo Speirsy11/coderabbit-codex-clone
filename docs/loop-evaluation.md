@@ -301,3 +301,32 @@ Add config preset generation/docs for common local tools if the worktree remains
 ### Chosen next slice
 
 Add another small preset or improve docs/tests based on next status check.
+
+
+## 2026-05-18 15:30 BST — Loop 9: Python and Ruby local-tool presets v0.1
+
+### Development completed
+
+- Added `python` and `ruby` config presets.
+- Python: blocking pytest plus advisory ruff.
+- Ruby: blocking rspec plus advisory rubocop.
+- Updated preset tests and docs.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.6 / 10**. The quality gate is now easier to bootstrap for several common ecosystems while preserving explicit local command control.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Compatible config import from CodeRabbit YAML concepts.
+- Artifact adapters such as SARIF/JUnit.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Consider a tiny `.coderabbit.yaml` mapping doc or keep improving validation/docs depending on remaining time.

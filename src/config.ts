@@ -91,15 +91,18 @@ export function sanitizeConfig(input: Record<string, unknown>, defaults: CrxConf
 export function configPreset(name: string | undefined): CrxConfig {
   const base = defaultConfig();
   if (!name || name === "default" || name === "none") return base;
-  if (name === "node") {
-    return {
-      ...base,
-      localTools: [
-        { name: "test", command: ["npm", "test"], timeoutMs: 300000 },
-        { name: "build", command: ["npm", "run", "build"], timeoutMs: 300000 }
-      ]
-    };
-  }
+  if (name === "node") return withLocalTools(base, [
+    { name: "test", command: ["npm", "test"], timeoutMs: 300000 },
+    { name: "build", command: ["npm", "run", "build"], timeoutMs: 300000 }
+  ]);
+  if (name === "python") return withLocalTools(base, [
+    { name: "pytest", command: ["python", "-m", "pytest"], timeoutMs: 300000 },
+    { name: "ruff", command: ["python", "-m", "ruff", "check", "."], timeoutMs: 300000, blocking: false }
+  ]);
+  if (name === "ruby") return withLocalTools(base, [
+    { name: "rspec", command: ["bundle", "exec", "rspec"], timeoutMs: 300000 },
+    { name: "rubocop", command: ["bundle", "exec", "rubocop"], timeoutMs: 300000, blocking: false }
+  ]);
   throw new Error(`Unknown config preset: ${name}`);
 }
 
@@ -107,6 +110,10 @@ export async function initConfig(dir: string, preset?: string): Promise<string> 
   const path = resolve(dir, CONFIG_NAME);
   await writeFile(path, `${JSON.stringify(configPreset(preset), null, 2)}\n`, { flag: "wx" });
   return path;
+}
+
+function withLocalTools(base: CrxConfig, localTools: NonNullable<CrxConfig["localTools"]>): CrxConfig {
+  return { ...base, localTools };
 }
 
 function normalizeCommand(value: unknown): string | string[] | undefined {

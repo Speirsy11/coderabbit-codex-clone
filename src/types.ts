@@ -1,4 +1,5 @@
 export type Severity = "critical" | "major" | "minor" | "trivial" | "info";
+export type FindingCategory = "potential_issue" | "refactor_suggestion" | "nitpick";
 
 export type ReviewType = "all" | "committed" | "uncommitted";
 export type ReviewProfile = "chill" | "assertive";
@@ -6,6 +7,7 @@ export type ReviewProfile = "chill" | "assertive";
 export interface Finding {
   type: "finding";
   severity: Severity;
+  category?: FindingCategory;
   fileName: string;
   lineStart?: number;
   lineEnd?: number;

@@ -54,9 +54,10 @@ test("loadConfig reports invalid JSON with config filename", async () => {
   await assert.rejects(loadConfig(dir), /Invalid crx\.config\.json/);
 });
 
-test("node config preset enables test and build local tools", async () => {
-  const preset = configPreset("node");
-  assert.deepEqual(preset.localTools?.map((tool) => tool.name), ["test", "build"]);
+test("config presets enable common local tools", async () => {
+  assert.deepEqual(configPreset("node").localTools?.map((tool) => tool.name), ["test", "build"]);
+  assert.deepEqual(configPreset("python").localTools?.map((tool) => tool.name), ["pytest", "ruff"]);
+  assert.deepEqual(configPreset("ruby").localTools?.map((tool) => tool.name), ["rspec", "rubocop"]);
 
   const dir = await mkdtemp(join(tmpdir(), "crx-"));
   await initConfig(dir, "node");

@@ -522,3 +522,21 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: further docs/schema consistency checks, optional additional presets, and richer review categories.
+
+
+## Update: Python and Ruby local-tool presets v0.1 (2026-05-18 15:30 BST)
+
+Implemented since the previous loop:
+
+- Extended `crx config init --preset ...` beyond Node to include `python` and `ruby`.
+- Python preset adds blocking `python -m pytest` and advisory `python -m ruff check .`.
+- Ruby preset adds blocking `bundle exec rspec` and advisory `bundle exec rubocop`.
+- Updated tests and docs to cover all three presets.
+
+Current production-readiness score: **8.6 / 10**.
+
+Remaining high-impact gaps:
+
+1. Optional `.coderabbit.yaml` subset import/mapping.
+2. SARIF/JUnit artifact adapters.
+3. More nuanced per-tool severity mapping.

@@ -21,6 +21,7 @@ Return ONLY JSON. Do not wrap it in markdown. Schema:
   "findings": [
     {
       "severity": "critical" | "major" | "minor" | "trivial" | "info",
+      "category": "potential_issue" | "refactor_suggestion" | "nitpick",
       "fileName": "path/from/repo",
       "lineStart": 1,
       "lineEnd": 1,
@@ -51,7 +52,7 @@ ${input.toolResultText || "(none)"}
 Diff truncated: ${input.truncated ? "yes" : "no"}
 Review type: ${input.options.type}
 
-Review the diff below. Report only real, actionable issues introduced or exposed by this diff.
+Review the diff below. Report only real, actionable issues introduced or exposed by this diff. Use category potential_issue for correctness/security/reliability risks, refactor_suggestion for maintainability improvements, and nitpick for low-priority style concerns.
 
 ${input.diff}`;
 }

@@ -93,10 +93,10 @@ Commands are split and spawned without a shell. Use array form for exact argv co
 
 ### Preset configs
 
-For Node projects, generate a starter config with blocking `npm test` and `npm run build` checks:
+For Node, Python, and Ruby projects, generate a starter config with blocking `npm test`/`npm run build`, `pytest`/`ruff`, or `rspec`/`rubocop` checks:
 
 ```bash
-crx config init --preset node
+crx config init --preset node|python|ruby
 ```
 
 Edit the generated `localTools` array if your project uses different scripts or package managers.

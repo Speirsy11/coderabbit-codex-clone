@@ -49,6 +49,7 @@
         "required": ["severity", "fileName", "title", "message", "impact", "codegenInstructions", "suggestions"],
         "properties": {
           "severity": { "enum": ["critical", "major", "minor", "trivial", "info"] },
+          "category": { "enum": ["potential_issue", "refactor_suggestion", "nitpick"] },
           "fileName": { "type": "string" },
           "lineStart": { "type": "integer", "minimum": 1 },
           "lineEnd": { "type": "integer", "minimum": 1 },

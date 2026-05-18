@@ -290,7 +290,7 @@ Usage:
   crx [review] [--agent] [--interactive|--tui] [--fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
   crx summarize <crx-review.jsonl|->
   crx auth status
-  crx config init [--preset default|node]
+  crx config init [--preset default|node|python|ruby]
 
 Options:
   --dir <path>              Git repository directory
@@ -299,7 +299,7 @@ Options:
   --profile <mode>          Review noise profile: chill or assertive
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
-  --preset <name>           Config init preset: default, node
+  --preset <name>           Config init preset: default, node, python, ruby
 
 Summaries:
   crx summarize file.jsonl  Print finding/tool failure counts and blocking details
