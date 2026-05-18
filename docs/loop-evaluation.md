@@ -438,3 +438,30 @@ This closes more of the CI reporting gap for local/agent workflows. Remaining Co
 ### Next recommended slice
 
 Implement or document a small `.coderabbit.yaml` concept mapping for review profile, path filters, path instructions, and guideline files.
+
+
+## 2026-05-18 14:51 BST — Loop 14: CodeRabbit YAML subset mapping v0.1
+
+### Development completed
+
+- Commit `50d63e1` (`Map CodeRabbit YAML subset to local config`).
+- Added a safe local mapper for `.coderabbit.yaml` / `.coderabbit.yml` when `crx.config.json` is absent.
+- Mapped review profile, path filters, path instructions, and code guideline file patterns into the existing `CrxConfig` shape.
+- Added migration docs and tests for the supported subset.
+
+### Validation
+
+- `npm test` — pass, 65 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.1 / 10**. Teams with existing CodeRabbit config can now bootstrap the core local/CI review settings without hand-translating every repo, while unsupported hosted features stay out of scope.
+
+### CodeRabbit comparison
+
+This narrows the most relevant configuration parity gap for agent-run local reviews. Remaining differences are full YAML schema coverage, hosted PR automation, dashboards, organization learnings, and managed tool execution.
+
+### Next recommended slice
+
+Harden the YAML subset mapper with edge-case tests and clearer precedence docs, then continue with small validation/doc polish until the 16:20 checkpoint.
