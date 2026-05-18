@@ -82,10 +82,16 @@ test("jsonl summary helper reports blocking artifacts", () => {
 });
 
 test("jsonl metrics helper emits compact counts", () => {
-  const input = JSON.stringify({ type: "tool_result", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", name: "lint", command: ["npm", "run", "lint"], exitCode: 1, durationMs: 10, passed: false, blocking: true, phase: "post_autofix" });
+  const input = [
+    JSON.stringify({ type: "review_context", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", repoDir: "/repo", reviewType: "uncommitted", diffBytes: 100, truncated: false, configFiles: [], changedFileStats: [{ fileName: "src/app.ts", status: "modified", additions: 3, deletions: 1 }] }),
+    JSON.stringify({ type: "tool_result", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", name: "lint", command: ["npm", "run", "lint"], exitCode: 1, durationMs: 10, passed: false, blocking: true, phase: "post_autofix" })
+  ].join("\n") + "\n";
   const result = spawnSync(process.execPath, ["scripts/crx-jsonl-metrics.mjs", "-"], { cwd: projectRoot, input, encoding: "utf8" });
   assert.equal(result.status, 3, result.stderr);
   const metrics = JSON.parse(result.stdout);
+  assert.equal(metrics.changedFiles.total, 1);
+  assert.equal(metrics.changedFiles.additions, 3);
+  assert.equal(metrics.changedFiles.deletions, 1);
   assert.equal(metrics.localTools.blockingFailures, 1);
   assert.equal(metrics.localTools.byPhase.post_autofix, 1);
 });

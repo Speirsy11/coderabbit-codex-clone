@@ -27,6 +27,7 @@ const complete = [...events].reverse().find((event) => event.type === "complete"
 const failedTools = tools.filter((tool) => !tool.passed);
 const blockingTools = failedTools.filter((tool) => tool.blocking !== false);
 const blockingFindings = findings.filter((finding) => finding.severity === "critical" || finding.severity === "major");
+const changedFileStats = events.flatMap((event) => event.type === "review_context" ? event.changedFileStats ?? [] : []);
 
 const metrics = {
   findings: {
@@ -37,6 +38,17 @@ const metrics = {
       ["uncategorized", findings.filter((finding) => !finding.category).length]
     ]),
     blocking: blockingFindings.length
+  },
+  changedFiles: {
+    total: changedFileStats.length,
+    additions: changedFileStats.reduce((sum, stat) => sum + stat.additions, 0),
+    deletions: changedFileStats.reduce((sum, stat) => sum + stat.deletions, 0),
+    byStatus: {
+      added: changedFileStats.filter((stat) => stat.status === "added").length,
+      modified: changedFileStats.filter((stat) => stat.status === "modified").length,
+      deleted: changedFileStats.filter((stat) => stat.status === "deleted").length,
+      renamed: changedFileStats.filter((stat) => stat.status === "renamed").length
+    }
   },
   localTools: {
     total: tools.length,

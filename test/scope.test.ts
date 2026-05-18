@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULT_PATH_FILTERS, effectiveGuidelineFiles, filterDiffByPath, filesFromDiff, matchesPathPattern, renderPathInstructions } from "../src/scope.js";
+import { DEFAULT_PATH_FILTERS, effectiveGuidelineFiles, filterDiffByPath, filesFromDiff, fileStatsFromDiff, matchesPathPattern, renderPathInstructions } from "../src/scope.js";
 
 test("matches common glob patterns", () => {
   assert.equal(matchesPathPattern("src/app/main.ts", "src/**/*.ts"), true);
@@ -45,8 +45,40 @@ test("renders only path instructions that match changed files", () => {
   assert.doesNotMatch(text, /Check docs/);
 });
 
-test("extracts diff file list and keeps default guideline files", () => {
-  const diff = "diff --git a/src/a.ts b/src/a.ts\n--- a/src/a.ts\n+++ b/src/a.ts\n";
-  assert.deepEqual(filesFromDiff(diff), ["src/a.ts"]);
+test("extracts diff file list, stats, and keeps default guideline files", () => {
+  const diff = [
+    "diff --git a/src/a.ts b/src/a.ts",
+    "--- a/src/a.ts",
+    "+++ b/src/a.ts",
+    "@@ -1,2 +1,3 @@",
+    " keep",
+    "-old",
+    "+new",
+    "+extra",
+    "diff --git a/src/new.ts b/src/new.ts",
+    "new file mode 100644",
+    "--- /dev/null",
+    "+++ b/src/new.ts",
+    "@@ -0,0 +1 @@",
+    "+created",
+    "diff --git a/src/old.ts b/src/old.ts",
+    "deleted file mode 100644",
+    "--- a/src/old.ts",
+    "+++ /dev/null",
+    "@@ -1 +0,0 @@",
+    "-gone",
+    "diff --git a/src/name.ts b/src/renamed.ts",
+    "similarity index 100%",
+    "rename from src/name.ts",
+    "rename to src/renamed.ts",
+    ""
+  ].join("\n");
+  assert.deepEqual(filesFromDiff(diff), ["src/a.ts", "src/new.ts", "src/old.ts", "src/renamed.ts"]);
+  assert.deepEqual(fileStatsFromDiff(diff), [
+    { fileName: "src/a.ts", status: "modified", additions: 2, deletions: 1 },
+    { fileName: "src/new.ts", status: "added", additions: 1, deletions: 0 },
+    { fileName: "src/old.ts", status: "deleted", additions: 0, deletions: 1 },
+    { fileName: "src/renamed.ts", status: "renamed", additions: 0, deletions: 0 }
+  ]);
   assert.ok(effectiveGuidelineFiles({}).includes("AGENTS.md"));
 });

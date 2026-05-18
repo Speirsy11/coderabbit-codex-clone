@@ -76,6 +76,7 @@ async function review(args: string[]): Promise<number> {
       configFiles: options.configFiles,
       configSource: loadedConfigSource,
       changedFiles: collected.changedFiles,
+      changedFileStats: collected.changedFileStats,
       changedFilesCount: collected.changedFiles.length + collected.excludedFiles.length,
       reviewedFilesCount: collected.changedFiles.length,
       excludedFilesCount: collected.excludedFiles.length,

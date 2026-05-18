@@ -32,6 +32,7 @@ export function summarizeAgentJsonl(input: string): string {
 
 export interface AgentJsonlMetrics {
   findings: { total: number; bySeverity: Record<Severity, number>; byCategory: Record<FindingCategory | "uncategorized", number>; blocking: number };
+  changedFiles: { total: number; additions: number; deletions: number; byStatus: Record<"added" | "modified" | "deleted" | "renamed", number> };
   localTools: { total: number; failed: number; blockingFailures: number; timedOut: number; byPhase: Record<"pre_review" | "post_autofix", number> };
   complete?: { summary: string; exitCode?: number; needsRerun?: boolean; autoFixApplied?: boolean };
   errors: string[];
@@ -46,8 +47,20 @@ export function summarizeAgentJsonlMetrics(input: string): AgentJsonlMetrics {
     ...categories.map((category) => [category, findings.filter((finding) => finding.category === category).length] as const),
     ["uncategorized", findings.filter((finding) => !finding.category).length] as const
   ]) as Record<FindingCategory | "uncategorized", number>;
+  const changedFileStats = events.flatMap((event) => event.type === "review_context" ? event.changedFileStats ?? [] : []);
   return {
     findings: { total: findings.length, bySeverity, byCategory, blocking: findings.filter(isBlockingFinding).length },
+    changedFiles: {
+      total: changedFileStats.length,
+      additions: changedFileStats.reduce((sum, stat) => sum + stat.additions, 0),
+      deletions: changedFileStats.reduce((sum, stat) => sum + stat.deletions, 0),
+      byStatus: {
+        added: changedFileStats.filter((stat) => stat.status === "added").length,
+        modified: changedFileStats.filter((stat) => stat.status === "modified").length,
+        deleted: changedFileStats.filter((stat) => stat.status === "deleted").length,
+        renamed: changedFileStats.filter((stat) => stat.status === "renamed").length
+      }
+    },
     localTools: {
       total: tools.length,
       failed: failedTools.length,

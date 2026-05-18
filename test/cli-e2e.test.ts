@@ -237,6 +237,7 @@ test("untracked text files are included in uncommitted review context", async ()
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.untrackedFiles, ["new-file.ts"]);
   assert.deepEqual(context.changedFiles, ["new-file.ts"]);
+  assert.deepEqual(context.changedFileStats, [{ fileName: "new-file.ts", status: "added", additions: 1, deletions: 0 }]);
   assert.equal(context.changedFilesCount, 1);
   assert.equal(context.reviewedFilesCount, 1);
   assert.equal(context.excludedFilesCount, 0);
@@ -267,6 +268,8 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.excludedFiles, ["dist/bundle.js"]);
   assert.deepEqual(context.changedFiles, ["crx.config.json", "src/feature.ts"]);
+  assert.deepEqual(context.changedFileStats.map((item) => item.fileName), ["crx.config.json", "src/feature.ts"]);
+  assert.equal(context.changedFileStats.every((item) => item.status === "added"), true);
   assert.equal(context.changedFilesCount, 3);
   assert.equal(context.reviewedFilesCount, 2);
   assert.equal(context.excludedFilesCount, 1);

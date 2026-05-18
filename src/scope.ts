@@ -1,4 +1,4 @@
-import type { CrxConfig } from "./types.js";
+import type { ChangedFileStat, CrxConfig } from "./types.js";
 
 export const DEFAULT_PATH_FILTERS = [
   "node_modules/**",
@@ -51,7 +51,25 @@ export function filterDiffByPath(diff: string, excludePatterns: string[]): { dif
 }
 
 export function filesFromDiff(diff: string): string[] {
-  return unique(splitDiffChunks(diff).map((chunk) => diffChunkPath(chunk)).filter((file): file is string => Boolean(file)));
+  return unique(fileStatsFromDiff(diff).map((stat) => stat.fileName));
+}
+
+export function fileStatsFromDiff(diff: string): ChangedFileStat[] {
+  return splitDiffChunks(diff).map(diffChunkStats).filter((stat): stat is ChangedFileStat => Boolean(stat));
+}
+
+function diffChunkStats(chunk: string): ChangedFileStat | undefined {
+  const fileName = diffChunkPath(chunk);
+  if (!fileName) return undefined;
+  const status = /\nnew file mode /.test(chunk) ? "added" : /\ndeleted file mode /.test(chunk) ? "deleted" : /\nrename from .+\nrename to /.test(chunk) ? "renamed" : "modified";
+  let additions = 0;
+  let deletions = 0;
+  for (const line of chunk.split("\n")) {
+    if (line.startsWith("+++") || line.startsWith("---")) continue;
+    if (line.startsWith("+")) additions++;
+    else if (line.startsWith("-")) deletions++;
+  }
+  return { fileName, status, additions, deletions };
 }
 
 export function renderPathInstructions(config: CrxConfig, files: string[]): string {

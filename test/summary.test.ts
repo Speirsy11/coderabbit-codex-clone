@@ -21,6 +21,7 @@ test("summarizeAgentJsonl highlights blocking findings and tool failures", () =>
 
 test("summarizeAgentJsonlJson emits dashboard-friendly metrics", () => {
   const jsonl = [
+    { type: "review_context", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", repoDir: "/repo", reviewType: "uncommitted", diffBytes: 100, truncated: false, configFiles: [], changedFileStats: [{ fileName: "src/app.ts", status: "modified", additions: 4, deletions: 1 }, { fileName: "src/new.ts", status: "added", additions: 2, deletions: 0 }] },
     { type: "finding", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", severity: "critical", category: "potential_issue", fileName: "src/app.ts", title: "Crash", message: "bad", impact: "boom", codegenInstructions: "fix", suggestions: [] },
     { type: "finding", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", severity: "minor", fileName: "src/view.ts", title: "Nit", message: "small", impact: "noise", codegenInstructions: "tidy", suggestions: [] },
     { type: "tool_result", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", name: "lint", command: ["npm", "run", "lint"], exitCode: 2, durationMs: 10, passed: false, blocking: true, timedOut: true, phase: "post_autofix" },
@@ -34,6 +35,11 @@ test("summarizeAgentJsonlJson emits dashboard-friendly metrics", () => {
   assert.equal(metrics.findings.byCategory.potential_issue, 1);
   assert.equal(metrics.findings.byCategory.uncategorized, 1);
   assert.equal(metrics.findings.blocking, 1);
+  assert.equal(metrics.changedFiles.total, 2);
+  assert.equal(metrics.changedFiles.additions, 6);
+  assert.equal(metrics.changedFiles.deletions, 1);
+  assert.equal(metrics.changedFiles.byStatus.modified, 1);
+  assert.equal(metrics.changedFiles.byStatus.added, 1);
   assert.equal(metrics.localTools.blockingFailures, 1);
   assert.equal(metrics.localTools.timedOut, 1);
   assert.equal(metrics.localTools.byPhase.pre_review, 0);

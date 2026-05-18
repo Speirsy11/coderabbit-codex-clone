@@ -24,6 +24,7 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       requireStringArray(value, "configFiles", errors);
       optionalString(value, "configSource", errors);
       optionalStringArray(value, "changedFiles", errors);
+      optionalChangedFileStats(value, errors);
       optionalNonNegativeInteger(value, "changedFilesCount", errors);
       optionalNonNegativeInteger(value, "reviewedFilesCount", errors);
       optionalNonNegativeInteger(value, "excludedFilesCount", errors);
@@ -136,6 +137,26 @@ function requireStringArray(value: Record<string, unknown>, field: string, error
     return;
   }
   if (options.minItems !== undefined && array.length < options.minItems) errors.push(`${field} must contain at least ${options.minItems} item(s)`);
+}
+
+function optionalChangedFileStats(value: Record<string, unknown>, errors: string[]): void {
+  const stats = value.changedFileStats;
+  if (stats === undefined) return;
+  if (!Array.isArray(stats)) {
+    errors.push("changedFileStats must be an array");
+    return;
+  }
+  stats.forEach((item, index) => {
+    if (!item || typeof item !== "object") {
+      errors.push(`changedFileStats[${index}] must be an object`);
+      return;
+    }
+    const stat = item as Record<string, unknown>;
+    if (typeof stat.fileName !== "string") errors.push(`changedFileStats[${index}].fileName must be a string`);
+    if (!["added", "modified", "deleted", "renamed"].includes(String(stat.status))) errors.push(`changedFileStats[${index}].status must be one of added, modified, deleted, renamed`);
+    if (!Number.isInteger(stat.additions) || Number(stat.additions) < 0) errors.push(`changedFileStats[${index}].additions must be a non-negative integer`);
+    if (!Number.isInteger(stat.deletions) || Number(stat.deletions) < 0) errors.push(`changedFileStats[${index}].deletions must be a non-negative integer`);
+  });
 }
 
 function optionalStringArray(value: Record<string, unknown>, field: string, errors: string[]): void {

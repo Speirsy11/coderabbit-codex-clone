@@ -18,6 +18,13 @@ export interface Finding {
   suggestions: string[];
 }
 
+export interface ChangedFileStat {
+  fileName: string;
+  status: "added" | "modified" | "deleted" | "renamed";
+  additions: number;
+  deletions: number;
+}
+
 export interface ReviewContextEvent {
   type: "review_context";
   protocolVersion?: string;
@@ -31,6 +38,7 @@ export interface ReviewContextEvent {
   configFiles: string[];
   configSource?: string;
   changedFiles?: string[];
+  changedFileStats?: ChangedFileStat[];
   changedFilesCount?: number;
   reviewedFilesCount?: number;
   excludedFilesCount?: number;

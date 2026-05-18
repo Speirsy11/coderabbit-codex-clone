@@ -168,7 +168,7 @@ crx summarize --format json crx-review.jsonl > crx-review.metrics.json
 scripts/crx-jsonl-metrics.mjs crx-review.jsonl > crx-review.metrics.json
 ```
 
-The JSON includes finding counts by severity/category, blocking finding count, local tool failure/timing counts, final completion metadata, error messages, and the same gate-style exit code that `crx summarize` returns.
+The JSON includes finding counts by severity/category, blocking finding count, changed-file status/addition/deletion totals, local tool failure/timing counts, final completion metadata, error messages, and the same gate-style exit code that `crx summarize` returns.
 
 ## SARIF export
 
