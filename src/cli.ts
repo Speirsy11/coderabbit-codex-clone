@@ -5,7 +5,7 @@ import { applyPatch, buildAutoFixPrompt, extractUnifiedDiff } from "./autofix.js
 import { codexAuthStatus, runCodexExec } from "./codex.js";
 import { CONFIG_NAME, initConfig, loadConfig } from "./config.js";
 import { formatJsonl, formatPlain } from "./format.js";
-import { assertGitRepo, collectDiff } from "./git.js";
+import { assertGitRepo, collectDiff, worktreeStatus } from "./git.js";
 import { parseCodexFindings } from "./parser.js";
 import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import { buildReviewPrompt } from "./prompt.js";
@@ -93,12 +93,16 @@ async function review(args: string[]): Promise<number> {
     if (findings.length && (options.fix || (options.mode === "interactive" && (await askAutoFix(findings, false))))) {
       events.push(statusEvent("Generating Codex auto-fix patch."));
       if (options.mode !== "agent") tui.status("Generating Codex auto-fix patch");
+      const beforeStatus = await worktreeStatus(repoDir);
+      events.push(worktreeStatusEvent("before_autofix", beforeStatus));
       const fixPrompt = buildAutoFixPrompt({ findings, diff: redactedDiff, truncated: collected.truncated, config });
       const fixOutput = await runCodexExec(fixPrompt, config, repoDir);
       const patch = extractUnifiedDiff(fixOutput);
       const result = await applyPatch(repoDir, patch);
       autoFixApplied = result.applied;
-      events.push({ type: "autofix", applied: result.applied, summary: result.summary, needsRerun: result.applied, rerunCommand: result.applied ? buildRerunCommand(options) : undefined });
+      const afterStatus = await worktreeStatus(repoDir);
+      events.push(worktreeStatusEvent("after_autofix", afterStatus));
+      events.push({ type: "autofix", applied: result.applied, summary: result.summary, changedFiles: result.changedFiles ?? [], needsRerun: result.applied, rerunCommand: result.applied ? buildRerunCommand(options) : undefined });
       if (options.mode !== "agent") process.stdout.write(`${renderAutoFixResult(result)}\n`);
     }
 
@@ -223,6 +227,10 @@ function statusEvent(message: string): AgentEvent {
 
 function warningEvent(message: string, files?: string[]): AgentEvent {
   return { type: "warning", protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, message, files };
+}
+
+function worktreeStatusEvent(phase: "before_autofix" | "after_autofix", entries: string[]): AgentEvent {
+  return { type: "worktree_status", protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, phase, dirty: entries.length > 0, entries };
 }
 
 function buildRerunCommand(options: ReviewOptions): string {

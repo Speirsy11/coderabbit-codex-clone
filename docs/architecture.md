@@ -12,7 +12,7 @@
 6. `src/codex.ts` invokes `codex exec -` through the trusted Codex command and sends the review prompt over stdin.
 7. `src/parser.ts` extracts and validates findings from Codex output.
 8. `src/format.ts` renders human plain text or versioned JSONL agent events.
-9. Optional auto-fix asks Codex for a unified diff and applies it only after `git apply --check` succeeds.
+9. Optional auto-fix records pre/post worktree status, asks Codex for a unified diff, applies it only after `git apply --check` succeeds, and reports changed files.
 
 ## Security Notes
 

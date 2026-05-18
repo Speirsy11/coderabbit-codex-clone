@@ -74,12 +74,20 @@ A validated Codex finding. Severity is one of `critical`, `major`, `minor`, `tri
 }
 ```
 
+### `worktree_status`
+
+Emitted before and after auto-fix attempts so agents can see whether the worktree was already dirty and what changed afterward. `entries` are raw `git status --porcelain=v1` lines.
+
+```json
+{"type":"worktree_status","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","phase":"before_autofix","dirty":true,"entries":[" M src/app.ts"]}
+```
+
 ### `autofix`
 
 Emitted when `--fix` or interactive auto-fix runs.
 
 ```json
-{"type":"autofix","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","applied":true,"summary":"Applied Codex-generated patch.","needsRerun":true,"rerunCommand":"crx review --agent --type all"}
+{"type":"autofix","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","applied":true,"summary":"Applied Codex-generated patch.","changedFiles":["src/app.ts"],"needsRerun":true,"rerunCommand":"crx review --agent --type all"}
 ```
 
 If `applied` is true, the gate is not clean yet. Rerun the review before treating the change set as passing.

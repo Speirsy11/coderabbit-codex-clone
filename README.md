@@ -34,11 +34,11 @@ crx auth status
 crx config init
 ```
 
-`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `finding`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes. `crx.config.json` supports path filters, glob-scoped path instructions, and auto-detected guideline file patterns for agent reviews.
+`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `finding`, `worktree_status`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes. `crx.config.json` supports path filters, glob-scoped path instructions, and auto-detected guideline file patterns for agent reviews.
 
 `--tui`/`--interactive` opens a lightweight terminal UI with a spinner, severity counts, grouped findings, and an optional prompt to apply Codex-generated fixes for blocking findings.
 
-`--fix` enables auto-fix mode without prompting. After the review, `crx` asks Codex for a minimal unified diff patch for the findings, verifies it with `git apply --check`, and applies it with `git apply` only if the patch is valid. A successful apply exits `4` and reports `needsRerun: true`; rerun the review before treating the gate as passed. Review the resulting local diff before committing.
+`--fix` enables auto-fix mode without prompting. After the review, `crx` asks Codex for a minimal unified diff patch for the findings, verifies it with `git apply --check`, and applies it with `git apply` only if the patch is valid. A successful apply exits `4`, reports pre/post `worktree_status`, lists `changedFiles`, and sets `needsRerun: true`; rerun the review before treating the gate as passed. Review the resulting local diff before committing.
 
 
 ## CI Quality Gate

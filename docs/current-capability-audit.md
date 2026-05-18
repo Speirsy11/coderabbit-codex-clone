@@ -384,3 +384,15 @@ Remaining high-impact gaps:
 2. Friendlier base-branch/shallow-clone remediation.
 3. Auto-fix changed-file and worktree-status reporting.
 4. JSON Schema is documented and parse-tested, but not runtime-validated by the CLI.
+
+## 2026-05-18 update — Auto-fix worktree observability v0.4
+
+Implemented:
+
+- Auto-fix now emits `worktree_status` events before and after patch attempts, including raw porcelain status entries and a dirty boolean.
+- Auto-fix events now include `changedFiles` derived from the generated patch.
+- E2E tests verify worktree status events and changed-file reporting.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: base-branch/shallow-clone remediation and CI examples for agent quality-gate use.

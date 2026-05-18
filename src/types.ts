@@ -64,8 +64,18 @@ export interface AutoFixEvent {
   schemaVersion?: string;
   applied: boolean;
   summary: string;
+  changedFiles?: string[];
   needsRerun?: boolean;
   rerunCommand?: string;
+}
+
+export interface WorktreeStatusEvent {
+  type: "worktree_status";
+  protocolVersion?: string;
+  schemaVersion?: string;
+  phase: "before_autofix" | "after_autofix";
+  dirty: boolean;
+  entries: string[];
 }
 
 export interface ErrorEvent {
@@ -76,7 +86,7 @@ export interface ErrorEvent {
   details?: string;
 }
 
-export type AgentEvent = ReviewContextEvent | StatusEvent | WarningEvent | Finding | CompleteEvent | AutoFixEvent | ErrorEvent;
+export type AgentEvent = ReviewContextEvent | StatusEvent | WarningEvent | Finding | CompleteEvent | AutoFixEvent | WorktreeStatusEvent | ErrorEvent;
 
 export interface CrxConfig {
   codexCommand?: string;

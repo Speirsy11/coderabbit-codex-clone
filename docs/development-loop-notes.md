@@ -48,3 +48,23 @@ Next likely gaps:
 - Friendlier base-branch/remediation behavior for shallow/fresh clones.
 - Optional worktree status events around auto-fix.
 - CI examples and documented shell/GitHub Actions usage.
+
+## 2026-05-18 14:45–14:55 BST — Auto-fix worktree observability v0.4
+
+Evaluation source: current audit gap about missing pre/post worktree status and changed-file reporting for auto-fix.
+
+Implemented:
+
+- Added `worktree_status` JSONL events before and after auto-fix attempts, using raw `git status --porcelain=v1` entries.
+- Added `changedFiles` to `autofix` events and `AutoFixResult`, derived from the generated patch.
+- Added tests for patch changed-file extraction and E2E auto-fix status events.
+- Updated README, architecture docs, and agent contract for the new event.
+
+Validation:
+
+- `npm test` passed: 36/36.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Friendlier base-branch/shallow-clone remediation, or CI examples for GitHub Actions/generic shell.

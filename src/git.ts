@@ -123,3 +123,10 @@ async function runGit(args: string[], cwd: string): Promise<{ code: number; stdo
     child.on("error", (err) => resolvePromise({ code: 1, stdout, stderr: err.message }));
   });
 }
+
+
+export async function worktreeStatus(cwd: string): Promise<string[]> {
+  const result = await runGit(["status", "--porcelain=v1"], cwd);
+  if (result.code !== 0) throw new Error(result.stderr || "git status failed");
+  return result.stdout.split(/\r?\n/).filter(Boolean);
+}

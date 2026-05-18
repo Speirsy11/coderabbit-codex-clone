@@ -5,6 +5,7 @@ export interface AutoFixResult {
   applied: boolean;
   patch?: string;
   summary: string;
+  changedFiles?: string[];
 }
 
 export function buildAutoFixPrompt(input: { findings: Finding[]; diff: string; truncated: boolean; config: CrxConfig }): string {
@@ -56,7 +57,7 @@ export async function applyPatch(repoDir: string, patch: string): Promise<AutoFi
   if (check.code !== 0) return { applied: false, patch, summary: check.stderr || "Generated patch failed git apply --check." };
   const applied = await runGitApply(repoDir, ["apply"], patch);
   if (applied.code !== 0) return { applied: false, patch, summary: applied.stderr || "Generated patch failed during apply." };
-  return { applied: true, patch, summary: "Applied Codex-generated patch." };
+  return { applied: true, patch, summary: "Applied Codex-generated patch.", changedFiles: filesFromPatch(patch) };
 }
 
 function runGitApply(cwd: string, args: string[], stdin: string): Promise<{ code: number; stdout: string; stderr: string }> {
@@ -72,4 +73,13 @@ function runGitApply(cwd: string, args: string[], stdin: string): Promise<{ code
     child.on("error", (err) => resolve({ code: 1, stdout, stderr: err.message }));
     child.stdin.end(stdin);
   });
+}
+
+
+export function filesFromPatch(patch: string): string[] {
+  return [...new Set([...patch.matchAll(/^diff --git a\/(.+?) b\/(.+)$/gm)].map((match) => stripPatchPath(match[2])))].sort();
+}
+
+function stripPatchPath(path: string): string {
+  return path.replace(/^"|"$/g, "").replace(/\\"/g, '"');
 }
