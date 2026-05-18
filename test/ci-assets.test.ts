@@ -24,6 +24,15 @@ test("GitHub Actions docs preserve review artifacts", async () => {
   assert.match(docs, /actions\/upload-artifact@v4/);
 });
 
+test("CodeRabbit config mapping docs cover local equivalents", async () => {
+  const docs = await readFile(resolve(projectRoot, "docs/coderabbit-config-mapping.md"), "utf8");
+  assert.match(docs, /reviews\.profile/);
+  assert.match(docs, /reviewProfile/);
+  assert.match(docs, /pathInstructions/);
+  assert.match(docs, /codeGuidelines/);
+  assert.match(docs, /localTools/);
+});
+
 test("quality gate shell wrapper parses", () => {
   const result = spawnSync("bash", ["-n", "scripts/crx-quality-gate.sh"], { cwd: projectRoot, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);

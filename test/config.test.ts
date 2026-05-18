@@ -64,3 +64,28 @@ test("config presets enable common local tools", async () => {
   const loaded = await loadConfig(dir);
   assert.deepEqual(loaded.localTools?.map((tool) => tool.command), [["npm", "test"], ["npm", "run", "build"]]);
 });
+
+test("loadConfig maps a supported .coderabbit.yaml subset", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-"));
+  await writeFile(join(dir, ".coderabbit.yaml"), `reviews:
+  profile: assertive
+  path_filters:
+    - "dist/**"
+    - "vendor/**"
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions:
+        - "Check runtime behavior."
+        - "Prefer safe exits."
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - "AGENTS.md"
+      - "docs/review.md"
+`);
+  const config = await loadConfig(dir);
+  assert.equal(config.reviewProfile, "assertive");
+  assert.deepEqual(config.pathFilters, ["dist/**", "vendor/**"]);
+  assert.deepEqual(config.pathInstructions, [{ pattern: "src/**/*.ts", instructions: ["Check runtime behavior.", "Prefer safe exits."] }]);
+  assert.deepEqual(config.codeGuidelines?.filePatterns, ["AGENTS.md", "docs/review.md"]);
+});

@@ -611,3 +611,27 @@ Remaining high-impact gaps:
 1. Optional `.coderabbit.yaml` subset import/mapping.
 2. CI examples uploading SARIF/JUnit artifacts end-to-end.
 3. More nuanced tool-result severity mapping.
+
+## 2026-05-18 update — CodeRabbit config concept mapping v0.1
+
+Implemented:
+
+- Added `docs/coderabbit-config-mapping.md` to map CI-relevant CodeRabbit YAML concepts onto `crx.config.json`.
+- Covered review profiles, path filters, path instructions, code guideline files, local tool enablement, and explicit change-set scope flags.
+- Linked the mapping from the README and added docs regression coverage.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: optional machine-assisted importer for a safe YAML subset, richer artifact upload examples per CI provider, and hosted/team features that remain intentionally out of scope.
+
+## 2026-05-18 update — CodeRabbit YAML subset mapping v1.0
+
+Implemented:
+
+- Added `.coderabbit.yaml` / `.coderabbit.yml` fallback loading when native `crx.config.json` is absent.
+- Supported safe local-review fields: `reviews.profile`, `reviews.path_filters`, `reviews.path_instructions`, and `knowledge_base.code_guidelines.filePatterns`.
+- Added a dependency-free subset parser, sanitizer handoff, tests, and docs.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: stronger docs/schema consistency checks, richer GitHub Actions artifact upload examples, and deeper tool-result severity mapping.

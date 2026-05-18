@@ -1,5 +1,6 @@
 import { access, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { CODERABBIT_CONFIG_NAMES, codeRabbitYamlToCrxConfig } from "./coderabbit-config.js";
 import type { CrxConfig } from "./types.js";
 
 export const CONFIG_NAME = "crx.config.json";
@@ -33,7 +34,7 @@ export async function loadConfig(repoDir: string): Promise<CrxConfig> {
   try {
     await access(path);
   } catch {
-    return defaultConfig();
+    return loadCodeRabbitYamlConfig(repoDir);
   }
   let parsed: unknown;
   try {
@@ -43,6 +44,19 @@ export async function loadConfig(repoDir: string): Promise<CrxConfig> {
   }
   if (!isRecord(parsed)) throw new Error(`Invalid ${CONFIG_NAME}: expected a JSON object.`);
   return sanitizeConfig(parsed, defaultConfig());
+}
+
+async function loadCodeRabbitYamlConfig(repoDir: string): Promise<CrxConfig> {
+  for (const name of CODERABBIT_CONFIG_NAMES) {
+    const path = join(repoDir, name);
+    try {
+      await access(path);
+      return sanitizeConfig(codeRabbitYamlToCrxConfig(await readFile(path, "utf8")) as Record<string, unknown>, defaultConfig());
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw new Error(`Invalid ${name}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  return defaultConfig();
 }
 
 export function sanitizeConfig(input: Record<string, unknown>, defaults: CrxConfig = defaultConfig()): CrxConfig {

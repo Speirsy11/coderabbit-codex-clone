@@ -35,7 +35,7 @@ crx auth status
 crx config init --preset node|python|ruby
 ```
 
-`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `tool_result`, `finding`, `worktree_status`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes. Findings include severity plus an optional category (`potential_issue`, `refactor_suggestion`, or `nitpick`). `--profile chill|assertive` tunes review noise; `chill` is the default and asks for production-relevant issues only. `crx.config.json` supports path filters, glob-scoped path instructions, auto-detected guideline file patterns, review profiles, and opt-in local tool commands for agent reviews.
+`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `tool_result`, `finding`, `worktree_status`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes. Findings include severity plus an optional category (`potential_issue`, `refactor_suggestion`, or `nitpick`). `--profile chill|assertive` tunes review noise; `chill` is the default and asks for production-relevant issues only. `crx.config.json` supports path filters, glob-scoped path instructions, auto-detected guideline file patterns, review profiles, and opt-in local tool commands for agent reviews. If `crx.config.json` is absent, crx also reads a safe `.coderabbit.yaml` / `.coderabbit.yml` subset for `reviews.profile`, `reviews.path_filters`, `reviews.path_instructions`, and `knowledge_base.code_guidelines.filePatterns`.
 
 `--tui`/`--interactive` opens a lightweight terminal UI with a spinner, severity counts, grouped findings, and an optional prompt to apply Codex-generated fixes for blocking findings.
 
@@ -44,7 +44,7 @@ crx config init --preset node|python|ruby
 
 ## CI Quality Gate
 
-For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable helpers are available at `scripts/crx-quality-gate.sh` for one-pass gating, `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop, `scripts/crx-jsonl-summary.mjs` for compact CI summaries, `scripts/crx-jsonl-to-sarif.mjs` for SARIF export, and `scripts/crx-jsonl-to-junit.mjs` for JUnit reports. The built CLI also supports `crx summarize --format text|sarif|junit`.
+For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, `docs/coderabbit-config-mapping.md` for CodeRabbit config concept mapping, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable helpers are available at `scripts/crx-quality-gate.sh` for one-pass gating, `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop, `scripts/crx-jsonl-summary.mjs` for compact CI summaries, `scripts/crx-jsonl-to-sarif.mjs` for SARIF export, and `scripts/crx-jsonl-to-junit.mjs` for JUnit reports. The built CLI also supports `crx summarize --format text|sarif|junit`.
 
 ## Agent Loop
 

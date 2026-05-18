@@ -188,3 +188,43 @@ Validation:
 Next likely gap:
 
 - Optional `.coderabbit.yaml` subset mapping/import docs, or artifact examples in GitHub Actions.
+
+## 2026-05-18 14:55 BST — CodeRabbit config concept mapping v0.1
+
+Evaluation source: remaining parity gap around `.coderabbit.yaml` concepts after local config, presets, and artifacts landed.
+
+Implemented:
+
+- Added a focused mapping doc for supported CodeRabbit concepts and `crx.config.json` equivalents.
+- Documented an example migration for review profile, path instructions, and guideline file patterns.
+- Added tests that keep the mapping doc anchored to the key local config fields.
+
+Validation:
+
+- `npm test` passed.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Optional safe subset importer or additional CI provider examples if time remains.
+
+## 2026-05-18 16:05–16:15 BST — CodeRabbit YAML subset mapping v1.0
+
+Evaluation source: matrix/audit gap for compatible `.coderabbit.yaml` concepts without depending on hosted CodeRabbit behavior.
+
+Implemented:
+
+- If `crx.config.json` is absent, `loadConfig()` now reads `.coderabbit.yaml` / `.coderabbit.yml`.
+- Added a dependency-free YAML subset parser for known local review fields.
+- Mapped `reviews.profile`, `reviews.path_filters`, `reviews.path_instructions`, and `knowledge_base.code_guidelines.filePatterns` into the existing sanitized crx config.
+- Hosted-only settings remain ignored; local tool commands still live in native `crx.config.json`.
+- Added config-loader tests and README/CI docs.
+
+Validation:
+
+- `npm test` passed: 65/65.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Stronger docs/schema consistency checks or GitHub Actions examples that upload SARIF/JUnit artifacts end-to-end.
