@@ -104,10 +104,10 @@ If `applied` is true, the gate is not clean yet. Rerun the review before treatin
 
 ### `complete`
 
-Terminal event for a completed review. Blocking counts are included so agents can route decisions without re-counting every event.
+Terminal event for a completed review. Blocking counts and final `exitCode` are included so agents can route decisions without re-counting every event.
 
 ```json
-{"type":"complete","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","findingsCount":0,"blockingFindingsCount":0,"blockingToolsCount":0,"summary":"0 finding(s).","autoFixApplied":false,"needsRerun":false}
+{"type":"complete","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","findingsCount":0,"blockingFindingsCount":0,"blockingToolsCount":0,"exitCode":0,"summary":"0 finding(s).","autoFixApplied":false,"needsRerun":false}
 ```
 
 ### `error`

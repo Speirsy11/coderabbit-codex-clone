@@ -703,3 +703,15 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: final smoke review and generated-schema validator exploration.
+
+## 2026-05-18 update — Complete exit code and CI smoke artifacts v1.0
+
+Implemented:
+
+- Added final `exitCode` to `complete` events and taught summary artifact exit-code logic to use it.
+- Added JUnit failure `type` metadata for `finding` vs `tool_result` failures.
+- Smoke coverage now exercises config validation, review JSONL, and summary artifact generation together.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: generated-schema validator exploration and hosted/team features intentionally deferred.

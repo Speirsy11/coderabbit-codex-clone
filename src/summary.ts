@@ -34,6 +34,7 @@ export function agentJsonlExitCode(input: string): number {
   const { findings, tools, blockingTools, complete, errors } = analyzeAgentEvents(events);
   const blockingFindings = findings.filter(isBlockingFinding);
   if (errors.length) return 1;
+  if (complete?.type === "complete" && typeof complete.exitCode === "number") return complete.exitCode;
   if (blockingFindings.length || blockingTools.length) return 3;
   if (complete?.type === "complete" && complete.needsRerun) return 4;
   return 0;

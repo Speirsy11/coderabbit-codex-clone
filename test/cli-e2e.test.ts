@@ -172,6 +172,7 @@ test("agent mode exits 3 and emits finding for blocking findings", async () => {
   assert.equal(events.at(-1).type, "complete");
   assert.equal(events.at(-1).blockingFindingsCount, 1);
   assert.equal(events.at(-1).blockingToolsCount, 0);
+  assert.equal(events.at(-1).exitCode, 3);
 });
 
 test("agent mode emits error event for invalid Codex output", async () => {
@@ -201,6 +202,7 @@ test("agent auto-fix exits 4 and marks rerun required after applying a patch", a
   assert.deepEqual(autofix.changedFiles, ["app.ts"]);
   assert.equal(autofix.needsRerun, true);
   assert.equal(events.at(-1).needsRerun, true);
+  assert.equal(events.at(-1).exitCode, 4);
   assert.equal(await readFile(join(dir, "app.ts"), "utf8"), "export const value = 3;\n");
 });
 
@@ -299,6 +301,7 @@ test("local tool failures emit JSONL tool_result and fail the gate", async () =>
   assert.equal(toolResult.blocking, true);
   assert.equal(events.at(-1).type, "complete");
   assert.equal(events.at(-1).blockingToolsCount, 1);
+  assert.equal(events.at(-1).exitCode, 3);
 
   const prompt = await readFile(capture, "utf8");
   assert.match(prompt, /Local tool results:/);
@@ -350,5 +353,5 @@ test("quality gate wrapper validates config, review JSONL, and summary artifacts
 
   assert.match(await readFile(join(dir, "crx-review.txt"), "utf8"), /Blocking tool failures:/);
   assert.equal(JSON.parse(await readFile(join(dir, "crx-review.sarif"), "utf8")).runs[0].tool.driver.name, "crx");
-  assert.match(await readFile(join(dir, "crx-review.junit.xml"), "utf8"), /<failure type="tool_result"/);
+  assert.match(await readFile(join(dir, "crx-review.junit.xml"), "utf8"), /tool:project-check/);
 });

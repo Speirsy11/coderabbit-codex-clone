@@ -58,6 +58,7 @@ export interface CompleteEvent {
   findingsCount: number;
   blockingFindingsCount?: number;
   blockingToolsCount?: number;
+  exitCode?: number;
   summary: string;
   autoFixApplied?: boolean;
   needsRerun?: boolean;

@@ -42,7 +42,11 @@ test("quality gate shell wrapper parses and validates config first", async () =>
   const result = spawnSync("bash", ["-n", "scripts/crx-quality-gate.sh"], { cwd: projectRoot, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
   assert.match(script, /crx config validate --json > "\$config_out"/);
+  assert.match(script, /crx summarize "\$out" > "\$summary_out"/);
+  assert.match(script, /crx summarize --format sarif "\$out" > "\$sarif_out"/);
+  assert.match(script, /crx summarize --format junit "\$out" > "\$junit_out"/);
   assert.match(script, /CRX_SKIP_CONFIG_VALIDATE/);
+  assert.match(script, /CRX_SKIP_ARTIFACTS/);
 });
 
 

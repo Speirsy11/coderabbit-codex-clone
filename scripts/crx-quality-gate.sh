@@ -4,6 +4,9 @@ set -uo pipefail
 review_type="${CRX_REVIEW_TYPE:-committed}"
 out="${CRX_REVIEW_OUT:-crx-review.jsonl}"
 config_out="${CRX_CONFIG_OUT:-crx-config.json}"
+summary_out="${CRX_SUMMARY_OUT:-crx-review.txt}"
+sarif_out="${CRX_SARIF_OUT:-crx-review.sarif}"
+junit_out="${CRX_JUNIT_OUT:-crx-review.junit.xml}"
 
 if [ "${CRX_SKIP_CONFIG_VALIDATE:-0}" != "1" ]; then
   if ! crx config validate --json > "$config_out"; then
@@ -17,9 +20,35 @@ crx review --agent --type "$review_type" > "$out"
 code=$?
 set -e
 
+artifact_code=0
+if [ "${CRX_SKIP_ARTIFACTS:-0}" != "1" ] && [ -s "$out" ]; then
+  set +e
+  crx summarize "$out" > "$summary_out"
+  summary_code=$?
+  crx summarize --format sarif "$out" > "$sarif_out"
+  sarif_code=$?
+  crx summarize --format junit "$out" > "$junit_out"
+  junit_code=$?
+  set -e
+  for summarize_code in "$summary_code" "$sarif_code" "$junit_code"; do
+    case "$summarize_code" in
+      0|3|4)
+        ;;
+      *)
+        artifact_code=1
+        ;;
+    esac
+  done
+fi
+
+if [ "$artifact_code" -ne 0 ]; then
+  echo "crx gate artifact generation failed" >&2
+  exit 1
+fi
+
 case "$code" in
   0)
-    echo "crx gate passed"
+    echo "crx gate passed. See $out"
     ;;
   3)
     echo "crx gate failed: blocking findings remain. See $out" >&2

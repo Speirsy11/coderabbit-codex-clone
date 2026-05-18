@@ -9,15 +9,15 @@ export function agentJsonlToJunit(input: string): string {
   const blockingTools = tools.filter((tool) => tool.blocking !== false && !tool.passed);
   const cases = [
     ...blockingFindings.map((finding) => testCase(`finding:${finding.fileName}:${finding.title}`, failureMessage(finding), `${finding.impact}\n\nFix: ${finding.codegenInstructions}`)),
-    ...blockingTools.map((tool) => testCase(`tool:${tool.name}`, `${(tool.severity ?? "major").toUpperCase()} local tool ${tool.name} failed with exit ${tool.exitCode}${tool.timedOut ? " (timed out)" : ""}.`, [tool.stdout, tool.stderr].filter(Boolean).join("\n")))
+    ...blockingTools.map((tool) => testCase(`tool:${tool.name}`, `${(tool.severity ?? "major").toUpperCase()} local tool ${tool.name} failed with exit ${tool.exitCode}${tool.timedOut ? " (timed out)" : ""}.`, [tool.stdout, tool.stderr].filter(Boolean).join("\n"), "tool_result"))
   ];
   const tests = cases.length || 1;
   const fallback = cases.length ? "" : testCase("crx:pass");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="crx" tests="${tests}" failures="${cases.length}">\n${cases.join("")}${fallback}</testsuite>\n`;
 }
 
-function testCase(name: string, failure?: string, details = ""): string {
-  const body = failure ? `    <failure message="${escapeXml(failure)}">${escapeXml(details || failure)}</failure>\n` : "";
+function testCase(name: string, failure?: string, details = "", failureType = "finding"): string {
+  const body = failure ? `    <failure type="${escapeXml(failureType)}" message="${escapeXml(failure)}">${escapeXml(details || failure)}</failure>\n` : "";
   return `  <testcase classname="crx" name="${escapeXml(name)}">\n${body}  </testcase>\n`;
 }
 

@@ -72,6 +72,7 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       requireNumber(value, "findingsCount", errors, { integer: true, min: 0 });
       optionalNonNegativeInteger(value, "blockingFindingsCount", errors);
       optionalNonNegativeInteger(value, "blockingToolsCount", errors);
+      optionalNonNegativeInteger(value, "exitCode", errors);
       requireString(value, "summary", errors);
       optionalBoolean(value, "autoFixApplied", errors);
       optionalBoolean(value, "needsRerun", errors);

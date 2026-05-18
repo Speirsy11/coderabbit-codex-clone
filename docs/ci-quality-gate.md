@@ -19,6 +19,9 @@ crx config validate --json > crx-config.json
 set +e
 crx review --agent --type committed > crx-review.jsonl
 code=$?
+crx summarize crx-review.jsonl > crx-review.txt
+crx summarize --format sarif crx-review.jsonl > crx-review.sarif
+crx summarize --format junit crx-review.jsonl > crx-review.junit.xml
 set -e
 
 case "$code" in
@@ -28,6 +31,8 @@ case "$code" in
   *) echo "crx review failed" >&2; tail -n 20 crx-review.jsonl >&2; exit "$code" ;;
 esac
 ```
+
+The reusable `scripts/crx-quality-gate.sh` helper performs the same preflight and writes `crx-config.json`, `crx-review.jsonl`, `crx-review.txt`, `crx-review.sarif`, and `crx-review.junit.xml` by default. Set `CRX_SKIP_ARTIFACTS=1` only when another CI step handles summaries.
 
 ## GitHub Actions example
 

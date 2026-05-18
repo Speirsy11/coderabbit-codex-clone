@@ -127,9 +127,10 @@ async function review(args: string[]): Promise<number> {
     const blockingToolsCount = toolResults.filter((result) => result.blocking !== false && !result.passed).length;
     const blockingToolFailures = hasBlockingToolFailures(toolResults);
     const summary = blockingToolFailures ? `${findings.length} finding(s); blocking local tool failure.` : `${findings.length} finding(s).`;
-    events.push({ type: "complete", findingsCount: findings.length, blockingFindingsCount, blockingToolsCount, summary, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
+    const exitCode = autoFixApplied ? 4 : blockingFindingsCount > 0 || blockingToolFailures ? 3 : 0;
+    events.push({ type: "complete", findingsCount: findings.length, blockingFindingsCount, blockingToolsCount, exitCode, summary, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
     if (options.mode === "agent") process.stdout.write(formatJsonl(events));
-    return autoFixApplied ? 4 : hasBlockingFindings(findings) || blockingToolFailures ? 3 : 0;
+    return exitCode;
   } catch (err) {
     const errorEvent = { type: "error" as const, protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, message: err instanceof Error ? err.message : String(err) };
     tui.stop();

@@ -346,3 +346,23 @@ Validation:
 Next likely gap:
 
 - Final smoke review or generated-schema validator exploration.
+
+## 2026-05-18 15:05 BST — Complete exit code and CI smoke artifacts v1.0
+
+Evaluation source: final smoke pass for agent/CI consumers after config preflight and artifact export work.
+
+Implemented:
+
+- Added `exitCode` to `complete` events so saved JSONL carries the final gate decision directly.
+- `crx summarize` honors `complete.exitCode` when present while preserving error precedence.
+- JUnit failures now include a `type` attribute (`finding` or `tool_result`) for CI report consumers.
+- The quality-gate helper now produces config, review JSONL, text, SARIF, and JUnit artifacts in one smoke-tested path.
+
+Validation:
+
+- `npm test` passed: 74/74.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Generated-schema validator exploration or stop/handoff at checkpoint.
