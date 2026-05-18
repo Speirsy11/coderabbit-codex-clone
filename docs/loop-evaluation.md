@@ -829,3 +829,31 @@ This strengthens the local metrics/dashboard analogue while keeping hosted analy
 ### Next recommended slice
 
 Only safe polish remains: prompt compaction for very large guideline/tool context, or final critical review plus wait until the 16:20 checkpoint.
+
+
+## 2026-05-18 15:55 BST — Loop 25: Prompt context compaction guards
+
+### Development completed
+
+- Added bounded compaction for oversized instruction-file and local-tool prompt context.
+- Prompt markers now record original and shown character counts when context is truncated.
+- Added prompt regression coverage and README documentation.
+
+### Validation
+
+- `npm test` — pass, 80 tests.
+- `npm run build` — pass.
+- `git diff --check` — pass.
+
+### Production-readiness score
+
+**9.41 / 10**. Very large guideline files or tool logs are less likely to crowd out the actual diff while still leaving explicit truncation breadcrumbs in the model prompt.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Local tool failures are still separate `tool_result` events rather than synthetic findings.
+- Hosted PR comments, dashboards, org learnings, MCP, cross-repo context, and managed execution remain intentionally out of scope.
+
+### Chosen next slice
+
+Validate, commit, push, and stop at a clean state unless the requester asks for another loop.
