@@ -148,3 +148,23 @@ Validation:
 Next likely gap:
 
 - Optional `.coderabbit.yaml` subset mapping/import docs, or artifact adapters such as SARIF/JUnit.
+
+## 2026-05-18 15:50–16:00 BST — SARIF summary export v1.1
+
+Evaluation source: remaining artifact-adapter gap after JSONL summaries and local-tool presets.
+
+Implemented:
+
+- Added `crx summarize --format sarif <jsonl>` to convert agent findings to SARIF 2.1.0.
+- SARIF results preserve severity, category, impact, fix instructions, suggestions, file, and line metadata.
+- Added unit and E2E coverage for SARIF conversion.
+- Updated README and CI docs with the export command.
+
+Validation:
+
+- `npm test` passed: 58/58.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Optional `.coderabbit.yaml` subset mapping/import docs or JUnit/tool-result artifact export.

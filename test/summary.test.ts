@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { agentJsonlToSarif } from "../src/sarif.js";
 import { parseAgentJsonl, summarizeAgentJsonl } from "../src/summary.js";
 
 test("summarizeAgentJsonl highlights blocking findings and tool failures", () => {
@@ -18,4 +19,14 @@ test("summarizeAgentJsonl highlights blocking findings and tool failures", () =>
 
 test("parseAgentJsonl reports invalid line numbers", () => {
   assert.throws(() => parseAgentJsonl('{"type":"status"}\nnot-json'), /line 2/);
+});
+
+
+test("agentJsonlToSarif converts findings to SARIF results", () => {
+  const jsonl = `${JSON.stringify({ type: "finding", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", severity: "major", category: "potential_issue", fileName: "src/app.ts", lineStart: 12, title: "Crash", message: "bad", impact: "boom", codegenInstructions: "fix", suggestions: [] })}\n`;
+  const sarif = JSON.parse(agentJsonlToSarif(jsonl));
+  assert.equal(sarif.version, "2.1.0");
+  assert.equal(sarif.runs[0].results[0].level, "error");
+  assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri, "src/app.ts");
+  assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine, 12);
 });

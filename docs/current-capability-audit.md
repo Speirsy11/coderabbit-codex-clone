@@ -570,3 +570,15 @@ Remaining high-impact gaps:
 1. Optional JUnit export for tool/finding summaries.
 2. Optional `.coderabbit.yaml` subset import/mapping.
 3. More nuanced tool-result to finding conversion.
+
+## 2026-05-18 update — SARIF summary export v1.1
+
+Implemented:
+
+- Added `crx summarize --format sarif` for converting saved agent JSONL findings into SARIF 2.1.0.
+- SARIF output carries crx severity/category plus impact, fix instructions, suggestions, file, and line metadata.
+- Added unit and E2E tests for SARIF conversion.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: optional `.coderabbit.yaml` subset mapping/import docs and JUnit/tool-result artifact export.

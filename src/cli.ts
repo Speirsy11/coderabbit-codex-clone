@@ -11,6 +11,7 @@ import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
 import { effectiveGuidelineFiles, effectivePathFilters, filesFromDiff, renderPathInstructions } from "./scope.js";
+import { agentJsonlToSarif } from "./sarif.js";
 import { summarizeAgentJsonl } from "./summary.js";
 import { hasBlockingToolFailures, renderToolResultsForPrompt, runLocalTools } from "./tools.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
@@ -136,9 +137,10 @@ async function summarize(args: string[]): Promise<number> {
     printHelp();
     return 0;
   }
-  const file = args[0];
+  const format = summarizeFormat(args);
+  const file = args.find((arg) => !arg.startsWith("-") && arg !== format);
   const input = file && file !== "-" ? await readFile(resolve(file), "utf8") : await readStdin();
-  process.stdout.write(summarizeAgentJsonl(input));
+  process.stdout.write(format === "sarif" ? agentJsonlToSarif(input) : summarizeAgentJsonl(input));
   return 0;
 }
 
@@ -238,6 +240,14 @@ function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
 }
 
+function summarizeFormat(args: string[]): "text" | "sarif" {
+  const index = args.indexOf("--format");
+  if (index < 0) return "text";
+  const value = args[index + 1];
+  if (value === "text" || value === "sarif") return value;
+  throw new Error("--format must be one of text, sarif.");
+}
+
 function parseType(value: string | undefined): ReviewType {
   if (value === "all" || value === "committed" || value === "uncommitted") return value;
   throw new Error("--type must be one of all, committed, uncommitted.");
@@ -288,7 +298,7 @@ function printHelp(): void {
 
 Usage:
   crx [review] [--agent] [--interactive|--tui] [--fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
-  crx summarize <crx-review.jsonl|->
+  crx summarize [--format text|sarif] <crx-review.jsonl|->
   crx auth status
   crx config init [--preset default|node|python|ruby]
 
@@ -302,7 +312,8 @@ Options:
   --preset <name>           Config init preset: default, node, python, ruby
 
 Summaries:
-  crx summarize file.jsonl  Print finding/tool failure counts and blocking details
+  crx summarize file.jsonl                 Print finding/tool failure counts and blocking details
+  crx summarize --format sarif file.jsonl  Convert findings to SARIF 2.1.0
 
 Exit codes:
   0 no blocking findings; 1 command/review failure; 3 blocking findings; 4 auto-fix applied, rerun required

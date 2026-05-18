@@ -40,6 +40,33 @@ test("jsonl summary helper reports blocking artifacts", () => {
   assert.match(result.stdout, /Blocking tool failures:/);
 });
 
+test("jsonl to sarif helper converts findings for code scanning", () => {
+  const input = [
+    JSON.stringify({
+      type: "finding",
+      severity: "major",
+      category: "potential_issue",
+      fileName: "src/app.ts",
+      lineStart: 7,
+      title: "Crash",
+      message: "Possible undefined access",
+      impact: "Runtime failure",
+      codegenInstructions: "Guard the value.",
+      suggestions: [{ fileName: "src/app.ts", lineStart: 7, lineEnd: 7, replacement: "if (!user) return;" }]
+    }),
+    JSON.stringify({ type: "complete", findingsCount: 1, summary: "1 finding." })
+  ].join("\n") + "\n";
+  const result = spawnSync(process.execPath, ["scripts/crx-jsonl-to-sarif.mjs", "-"], { cwd: projectRoot, input, encoding: "utf8" });
+  assert.equal(result.status, 3, result.stderr);
+  const sarif = JSON.parse(result.stdout);
+  assert.equal(sarif.version, "2.1.0");
+  assert.equal(sarif.runs[0].tool.driver.name, "crx");
+  assert.equal(sarif.runs[0].results[0].ruleId, "crx/potential_issue/major");
+  assert.equal(sarif.runs[0].results[0].level, "error");
+  assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri, "src/app.ts");
+  assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine, 7);
+});
+
 
 test("sarif helper converts findings", () => {
   const input = JSON.stringify({

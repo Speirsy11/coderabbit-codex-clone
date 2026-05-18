@@ -123,7 +123,6 @@ scripts/crx-jsonl-summary.mjs crx-review.jsonl
 
 It exits `3` when the artifact contains critical/major findings or blocking tool failures, `4` when the final `complete` event requires a rerun, `1` for error events or invalid JSONL, and `0` otherwise.
 
-
 ## SARIF export
 
 Use `scripts/crx-jsonl-to-sarif.mjs` when your CI system can display SARIF/code-scanning annotations:
