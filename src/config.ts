@@ -1,7 +1,7 @@
 import { access, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { CODERABBIT_CONFIG_NAMES, codeRabbitYamlToCrxConfig } from "./coderabbit-config.js";
-import type { CrxConfig } from "./types.js";
+import type { CrxConfig, Severity } from "./types.js";
 
 export const CONFIG_NAME = "crx.config.json";
 
@@ -94,7 +94,8 @@ export function sanitizeConfig(input: Record<string, unknown>, defaults: CrxConf
         enabled: typeof entry.enabled === "boolean" ? entry.enabled : undefined,
         blocking: typeof entry.blocking === "boolean" ? entry.blocking : undefined,
         timeoutMs: normalizePositiveInt(entry.timeoutMs),
-        outputLimit: normalizePositiveInt(entry.outputLimit)
+        outputLimit: normalizePositiveInt(entry.outputLimit),
+        failureSeverity: normalizeSeverity(entry.failureSeverity)
       }];
     }).slice(0, 20);
   }
@@ -128,6 +129,10 @@ export async function initConfig(dir: string, preset?: string): Promise<string> 
 
 function withLocalTools(base: CrxConfig, localTools: NonNullable<CrxConfig["localTools"]>): CrxConfig {
   return { ...base, localTools };
+}
+
+function normalizeSeverity(value: unknown): Severity | undefined {
+  return value === "critical" || value === "major" || value === "minor" || value === "trivial" || value === "info" ? value : undefined;
 }
 
 function normalizeCommand(value: unknown): string | string[] | undefined {

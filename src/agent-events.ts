@@ -51,6 +51,7 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       requireBoolean(value, "passed", errors);
       requireBoolean(value, "blocking", errors);
       optionalBoolean(value, "timedOut", errors);
+      optionalOneOf(value, "severity", ["critical", "major", "minor", "trivial", "info"], errors);
       optionalString(value, "stdout", errors);
       optionalString(value, "stderr", errors);
       break;

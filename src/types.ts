@@ -92,6 +92,7 @@ export interface ToolResultEvent {
   passed: boolean;
   blocking: boolean;
   timedOut?: boolean;
+  severity?: Severity;
   stdout?: string;
   stderr?: string;
 }
@@ -113,6 +114,7 @@ export interface LocalToolConfig {
   blocking?: boolean;
   timeoutMs?: number;
   outputLimit?: number;
+  failureSeverity?: Severity;
 }
 
 export interface CrxConfig {

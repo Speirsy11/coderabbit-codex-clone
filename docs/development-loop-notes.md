@@ -228,3 +228,24 @@ Validation:
 Next likely gap:
 
 - Stronger docs/schema consistency checks or GitHub Actions examples that upload SARIF/JUnit artifacts end-to-end.
+
+## 2026-05-18 16:15 BST — Local tool failure severity v1.0
+
+Evaluation source: audit gap for deeper tool-result severity mapping after artifact exporters were added.
+
+Implemented:
+
+- Added optional `localTools[].failureSeverity` with the same severity taxonomy as findings.
+- Failed `tool_result` events now include `severity` for JSONL/artifact consumers.
+- Defaults are `major` for blocking tools and `minor` for non-blocking tools.
+- Summary and JUnit output now show failed-tool severity.
+- Updated schema, runtime event validation, config sanitizer, README, CI docs, agent contract, and tests.
+
+Validation:
+
+- `npm run build` passed.
+- `npm test` passed: 69/69.
+
+Next likely gap:
+
+- Schema/docs consistency checks, generated validator exploration, or additional CI publishing examples.

@@ -23,7 +23,7 @@ export function summarizeAgentJsonl(input: string): string {
   if (blockingTools.length) {
     lines.push("");
     lines.push("Blocking tool failures:");
-    for (const tool of blockingTools) lines.push(`- ${tool.name}: exit ${tool.exitCode}${tool.timedOut ? " (timed out)" : ""}`);
+    for (const tool of blockingTools) lines.push(`- ${(tool.severity ?? "major").toUpperCase()} ${tool.name}: exit ${tool.exitCode}${tool.timedOut ? " (timed out)" : ""}`);
   }
 
   return `${lines.join("\n")}\n`;

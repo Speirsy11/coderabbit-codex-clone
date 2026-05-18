@@ -29,7 +29,7 @@ test("sanitizeConfig keeps only supported typed values", () => {
     ],
     codeGuidelines: { filePatterns: [" AGENTS.md ", 1, ""] },
     localTools: [
-      { name: " test ", command: [" npm ", " test "], timeoutMs: 1000, outputLimit: -1, blocking: false },
+      { name: " test ", command: [" npm ", " test "], timeoutMs: 1000, outputLimit: -1, blocking: false, failureSeverity: "critical" },
       { name: "bad", command: [] },
       { command: "npm test" }
     ]
@@ -45,7 +45,7 @@ test("sanitizeConfig keeps only supported typed values", () => {
     { pattern: "docs/**", instructions: ["check docs"] }
   ]);
   assert.deepEqual(config.codeGuidelines?.filePatterns, ["AGENTS.md"]);
-  assert.deepEqual(config.localTools, [{ name: "test", command: ["npm", "test"], timeoutMs: 1000, outputLimit: undefined, blocking: false, enabled: undefined }]);
+  assert.deepEqual(config.localTools, [{ name: "test", command: ["npm", "test"], timeoutMs: 1000, outputLimit: undefined, blocking: false, enabled: undefined, failureSeverity: "critical" }]);
 });
 
 test("loadConfig reports invalid JSON with config filename", async () => {
@@ -88,4 +88,32 @@ knowledge_base:
   assert.deepEqual(config.pathFilters, ["dist/**", "vendor/**"]);
   assert.deepEqual(config.pathInstructions, [{ pattern: "src/**/*.ts", instructions: ["Check runtime behavior.", "Prefer safe exits."] }]);
   assert.deepEqual(config.codeGuidelines?.filePatterns, ["AGENTS.md", "docs/review.md"]);
+});
+
+
+test("crx.config.json takes precedence over .coderabbit.yaml", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-"));
+  await writeFile(join(dir, ".coderabbit.yaml"), "reviews:\n  profile: assertive\n");
+  await writeFile(join(dir, CONFIG_NAME), JSON.stringify({ reviewProfile: "chill" }));
+  const config = await loadConfig(dir);
+  assert.equal(config.reviewProfile, "chill");
+});
+
+test("loadConfig maps .coderabbit.yml inline arrays and scalar instructions", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-"));
+  await writeFile(join(dir, ".coderabbit.yml"), `reviews:
+  profile: chill
+  path_filters: ["generated/**", "tmp/**"]
+  path_instructions:
+    - pattern: "docs/**"
+      instructions: "Check examples for copy-paste correctness."
+knowledge_base:
+  code_guidelines:
+    filePatterns: ["AGENTS.md", "README.md"]
+`);
+  const config = await loadConfig(dir);
+  assert.equal(config.reviewProfile, "chill");
+  assert.deepEqual(config.pathFilters, ["generated/**", "tmp/**"]);
+  assert.deepEqual(config.pathInstructions, [{ pattern: "docs/**", instructions: ["Check examples for copy-paste correctness."] }]);
+  assert.deepEqual(config.codeGuidelines?.filePatterns, ["AGENTS.md", "README.md"]);
 });

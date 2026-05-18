@@ -440,6 +440,34 @@ This closes more of the CI reporting gap for local/agent workflows. Remaining Co
 Implement or document a small `.coderabbit.yaml` concept mapping for review profile, path filters, path instructions, and guideline files.
 
 
+## 2026-05-18 14:58 BST — Loop 14: CodeRabbit config migration bridge v1.0
+
+### Development completed
+
+- Added a CodeRabbit config concept mapping doc linked from the README.
+- Added safe fallback loading for `.coderabbit.yaml` / `.coderabbit.yml` when native `crx.config.json` is absent.
+- Mapped `reviews.profile`, `reviews.path_filters`, `reviews.path_instructions`, and `knowledge_base.code_guidelines.filePatterns` into sanitized local config.
+- Documented precedence, supported fallback fields, and explicit non-goals for hosted CodeRabbit behavior and command execution.
+- Added regression coverage for mapping docs, `.coderabbit.yaml`, `.coderabbit.yml`, inline/list fallback shapes, and native config precedence.
+
+### Validation
+
+- `npm test` — pass, 67 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.1 / 10**. Teams migrating from CodeRabbit can now bootstrap equivalent local review-scope settings without adopting hosted behavior or implicit command execution, while native `crx.config.json` remains the clear source of truth for long-lived CI.
+
+### CodeRabbit comparison
+
+This closes the main local configuration migration gap for agent-run workflows. `crx` still intentionally does not provide hosted PR comments, dashboards, organization learnings, or managed cloud execution.
+
+### Next recommended slice
+
+Run a final end-to-end smoke review against a fixture repo or tighten docs/schema consistency checks if another small slice is needed.
+
+
 ## 2026-05-18 14:51 BST — Loop 14: CodeRabbit YAML subset mapping v0.1
 
 ### Development completed

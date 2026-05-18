@@ -97,6 +97,7 @@
           "passed": { "type": "boolean" },
           "blocking": { "type": "boolean" },
           "timedOut": { "type": "boolean" },
+          "severity": { "enum": ["critical", "major", "minor", "trivial", "info"] },
           "stdout": { "type": "string" },
           "stderr": { "type": "string" }
         }

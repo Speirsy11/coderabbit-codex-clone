@@ -635,3 +635,15 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: stronger docs/schema consistency checks, richer GitHub Actions artifact upload examples, and deeper tool-result severity mapping.
+
+## 2026-05-18 update — Local tool failure severity v1.0
+
+Implemented:
+
+- Added optional `failureSeverity` to local tool config and `severity` to failed `tool_result` events.
+- Blocking failed tools default to `major`; non-blocking failed tools default to `minor`; explicit severity overrides are sanitized.
+- Summary/JUnit output, JSON schema, runtime validation, docs, and tests now cover failed-tool severity.
+
+Validation: `npm run build` and `npm test` pass.
+
+Remaining high-impact gaps: schema/docs consistency checks, generated validator exploration, and richer CI artifact publishing examples.

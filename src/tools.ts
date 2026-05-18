@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { splitCommand } from "./command.js";
-import type { LocalToolConfig, ToolResultEvent } from "./types.js";
+import type { LocalToolConfig, Severity, ToolResultEvent } from "./types.js";
 import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 
 const DEFAULT_TOOL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -38,6 +38,7 @@ export async function runLocalTool(tool: LocalToolConfig, cwd: string): Promise<
     passed: result.exitCode === 0,
     blocking: tool.blocking !== false,
     timedOut: result.timedOut,
+    severity: result.exitCode === 0 ? undefined : toolFailureSeverity(tool),
     stdout: result.stdout,
     stderr: result.stderr
   };
@@ -57,6 +58,11 @@ export function renderToolResultsForPrompt(results: ToolResultEvent[]): string {
 
 export function hasBlockingToolFailures(results: ToolResultEvent[]): boolean {
   return results.some((result) => result.blocking !== false && !result.passed);
+}
+
+function toolFailureSeverity(tool: LocalToolConfig): Severity {
+  if (tool.failureSeverity === "critical" || tool.failureSeverity === "major" || tool.failureSeverity === "minor" || tool.failureSeverity === "trivial" || tool.failureSeverity === "info") return tool.failureSeverity;
+  return tool.blocking === false ? "minor" : "major";
 }
 
 function positiveInt(value: number | undefined): number | undefined {

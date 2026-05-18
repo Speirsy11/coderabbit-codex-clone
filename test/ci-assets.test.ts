@@ -31,6 +31,8 @@ test("CodeRabbit config mapping docs cover local equivalents", async () => {
   assert.match(docs, /pathInstructions/);
   assert.match(docs, /codeGuidelines/);
   assert.match(docs, /localTools/);
+  assert.match(docs, /Fallback import support/);
+  assert.match(docs, /crx\.config\.json.*wins/);
 });
 
 test("quality gate shell wrapper parses", () => {

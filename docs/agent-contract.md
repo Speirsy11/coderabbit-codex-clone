@@ -56,10 +56,10 @@ Non-fatal quality-gate caveat, such as skipped untracked files or files excluded
 
 ### `tool_result`
 
-Emitted for each configured local tool command before the Codex review. Commands run with `shell: false`; failed blocking tools make the gate exit `3`.
+Emitted for each configured local tool command before the Codex review. Commands run with `shell: false`; failed blocking tools make the gate exit `3`. Failed tools include a `severity` hint for summaries and artifacts; blocking tools default to `major`, non-blocking tools default to `minor`, and `localTools[].failureSeverity` can override that value.
 
 ```json
-{"type":"tool_result","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","name":"lint","command":["npm","run","lint"],"exitCode":0,"durationMs":812,"passed":true,"blocking":true,"timedOut":false,"stdout":"","stderr":""}
+{"type":"tool_result","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","name":"lint","command":["npm","run","lint"],"exitCode":1,"durationMs":812,"passed":false,"blocking":true,"timedOut":false,"severity":"major","stdout":"","stderr":"lint failed"}
 ```
 
 ### `finding`

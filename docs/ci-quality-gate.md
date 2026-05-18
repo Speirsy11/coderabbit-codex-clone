@@ -91,12 +91,12 @@ Example `crx.config.json` snippet:
   "reviewProfile": "chill",
   "localTools": [
     { "name": "test", "command": ["npm", "test"], "timeoutMs": 300000 },
-    { "name": "audit", "command": "npm audit --audit-level high", "blocking": false }
+    { "name": "audit", "command": "npm audit --audit-level high", "blocking": false, "failureSeverity": "minor" }
   ]
 }
 ```
 
-Commands are split and spawned without a shell. Use array form for exact argv control. Tool output is truncated before being included in JSONL and the Codex prompt. Use `reviewProfile: "chill"` for production-risk gates and `"assertive"` when you want broader maintainability feedback.
+Commands are split and spawned without a shell. Use array form for exact argv control. Tool output is truncated before being included in JSONL and the Codex prompt. Failed tools default to `major` severity when blocking and `minor` when non-blocking; set `failureSeverity` to override the JSONL/artifact severity. Use `reviewProfile: "chill"` for production-risk gates and `"assertive"` when you want broader maintainability feedback.
 
 ### Preset configs
 

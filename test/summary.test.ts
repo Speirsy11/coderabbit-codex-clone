@@ -48,5 +48,5 @@ test("agentJsonlToJunit converts blockers to failing test cases", () => {
   const xml = agentJsonlToJunit(jsonl);
   assert.match(xml, /<testsuite name="crx" tests="2" failures="2">/);
   assert.match(xml, /CRITICAL src\/app\.ts:3 Crash/);
-  assert.match(xml, /Local tool lint failed with exit 2/);
+  assert.match(xml, /MAJOR local tool lint failed with exit 2/);
 });
