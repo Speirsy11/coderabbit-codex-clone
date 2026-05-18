@@ -552,3 +552,21 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: optional `.coderabbit.yaml` subset mapping/import docs, artifact adapters, and deeper per-tool severity mapping.
+
+
+## Update: SARIF artifact adapter v0.1 (2026-05-18 15:40 BST)
+
+Implemented since the previous loop:
+
+- Added `scripts/crx-jsonl-to-sarif.mjs` to convert finding events to SARIF 2.1.0.
+- Maps critical/major to SARIF errors, minor to warnings, and trivial/info to notes.
+- Preserves category, severity, codegen instructions, suggestions, file, and line metadata.
+- Added fixture-based test coverage and CI docs.
+
+Current production-readiness score: **8.7 / 10**.
+
+Remaining high-impact gaps:
+
+1. Optional JUnit export for tool/finding summaries.
+2. Optional `.coderabbit.yaml` subset import/mapping.
+3. More nuanced tool-result to finding conversion.

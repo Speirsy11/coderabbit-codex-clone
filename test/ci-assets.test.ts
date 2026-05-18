@@ -39,3 +39,25 @@ test("jsonl summary helper reports blocking artifacts", () => {
   assert.match(result.stdout, /Blocking findings:/);
   assert.match(result.stdout, /Blocking tool failures:/);
 });
+
+
+test("sarif helper converts findings", () => {
+  const input = JSON.stringify({
+    type: "finding",
+    severity: "major",
+    category: "potential_issue",
+    fileName: "src/app.ts",
+    lineStart: 3,
+    title: "Crash",
+    message: "Null access",
+    impact: "Runtime failure",
+    codegenInstructions: "Add guard",
+    suggestions: ["Check null"]
+  }) + "\n";
+  const result = spawnSync(process.execPath, ["scripts/crx-jsonl-to-sarif.mjs", "-"], { cwd: projectRoot, input, encoding: "utf8" });
+  assert.equal(result.status, 3, result.stderr);
+  const sarif = JSON.parse(result.stdout);
+  assert.equal(sarif.version, "2.1.0");
+  assert.equal(sarif.runs[0].results[0].ruleId, "crx/potential_issue/major");
+  assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine, 3);
+});

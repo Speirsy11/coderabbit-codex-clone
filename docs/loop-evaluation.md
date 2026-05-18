@@ -330,3 +330,31 @@ Add another small preset or improve docs/tests based on next status check.
 ### Chosen next slice
 
 Consider a tiny `.coderabbit.yaml` mapping doc or keep improving validation/docs depending on remaining time.
+
+
+## 2026-05-18 15:40 BST — Loop 10: SARIF artifact adapter v0.1
+
+### Development completed
+
+- Added a SARIF conversion helper for JSONL finding events.
+- Added test coverage for SARIF structure and blocking exit behavior.
+- Documented SARIF export in CI docs.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.7 / 10**. The gate can now produce artifacts consumable by code-scanning surfaces, improving CI usefulness beyond raw logs.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- JUnit/tool-result artifact export.
+- Compatible config import from CodeRabbit YAML concepts.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Add a final validation/evaluation pass and choose another small artifact/config improvement if time remains.
