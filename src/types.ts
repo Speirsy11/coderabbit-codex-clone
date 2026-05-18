@@ -35,6 +35,13 @@ export interface CompleteEvent {
   type: "complete";
   findingsCount: number;
   summary: string;
+  autoFixApplied?: boolean;
+}
+
+export interface AutoFixEvent {
+  type: "autofix";
+  applied: boolean;
+  summary: string;
 }
 
 export interface ErrorEvent {
@@ -43,7 +50,7 @@ export interface ErrorEvent {
   details?: string;
 }
 
-export type AgentEvent = ReviewContextEvent | StatusEvent | Finding | CompleteEvent | ErrorEvent;
+export type AgentEvent = ReviewContextEvent | StatusEvent | Finding | CompleteEvent | AutoFixEvent | ErrorEvent;
 
 export interface CrxConfig {
   codexCommand?: string;
@@ -60,4 +67,5 @@ export interface ReviewOptions {
   color: boolean;
   maxDiffBytes: number;
   mode: "plain" | "agent" | "interactive";
+  fix: boolean;
 }

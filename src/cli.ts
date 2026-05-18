@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { lstat, readFile, realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
+import { applyPatch, buildAutoFixPrompt, extractUnifiedDiff } from "./autofix.js";
 import { codexAuthStatus, runCodexExec } from "./codex.js";
 import { CONFIG_NAME, initConfig, loadConfig } from "./config.js";
 import { formatJsonl, formatPlain } from "./format.js";
@@ -8,6 +9,7 @@ import { assertGitRepo, collectDiff } from "./git.js";
 import { parseCodexFindings } from "./parser.js";
 import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
+import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
 import type { AgentEvent, ReviewOptions, ReviewType } from "./types.js";
 
 const DEFAULT_MAX_DIFF_BYTES = 180000;
@@ -32,10 +34,7 @@ async function main(): Promise<number> {
 
 async function review(args: string[]): Promise<number> {
   const options = parseReviewArgs(args);
-  if (options.mode === "interactive") {
-    console.error("crx --interactive is not implemented in the MVP. Use plain output or --agent JSONL.");
-    return 2;
-  }
+  const tui = new ReviewTui(options.mode === "interactive");
   const repoDir = await assertGitRepo(options.dir);
   options.dir = repoDir;
   const config = await loadConfig(repoDir);
@@ -43,6 +42,7 @@ async function review(args: string[]): Promise<number> {
   const events: AgentEvent[] = [];
   try {
     events.push({ type: "status", message: "Collecting Git diff." });
+    tui.start("Collecting Git diff");
     const collected = await collectDiff(options);
     const redactedDiff = redactSecrets(collected.diff);
     const context = {
@@ -57,16 +57,34 @@ async function review(args: string[]): Promise<number> {
     };
     events.push(context);
     events.push({ type: "status", message: "Running Codex review." });
+    tui.status("Running Codex review");
     const configText = await readInstructionFiles(options.configFiles, repoDir);
     const prompt = buildReviewPrompt({ options, diff: redactedDiff, truncated: collected.truncated, configText, config });
     const codexOutput = await runCodexExec(prompt, config, repoDir);
     const findings = parseCodexFindings(codexOutput);
     events.push(...findings);
-    events.push({ type: "complete", findingsCount: findings.length, summary: `${findings.length} finding(s).` });
-    process.stdout.write(options.mode === "agent" ? formatJsonl(events) : `${formatPlain(findings, context)}\n`);
-    return hasBlockingFindings(findings) ? 3 : 0;
+    if (options.mode === "interactive") tui.render(findings, context);
+    else if (options.mode !== "agent") process.stdout.write(`${formatPlain(findings, context)}\n`);
+
+    let autoFixApplied = false;
+    if (findings.length && (options.fix || (options.mode === "interactive" && (await askAutoFix(findings, false))))) {
+      events.push({ type: "status", message: "Generating Codex auto-fix patch." });
+      tui.status("Generating Codex auto-fix patch");
+      const fixPrompt = buildAutoFixPrompt({ findings, diff: redactedDiff, truncated: collected.truncated, config });
+      const fixOutput = await runCodexExec(fixPrompt, config, repoDir);
+      const patch = extractUnifiedDiff(fixOutput);
+      const result = await applyPatch(repoDir, patch);
+      autoFixApplied = result.applied;
+      events.push({ type: "autofix", applied: result.applied, summary: result.summary });
+      if (options.mode !== "agent") process.stdout.write(`${renderAutoFixResult(result)}\n`);
+    }
+
+    events.push({ type: "complete", findingsCount: findings.length, summary: `${findings.length} finding(s).`, autoFixApplied });
+    if (options.mode === "agent") process.stdout.write(formatJsonl(events));
+    return autoFixApplied ? 0 : hasBlockingFindings(findings) ? 3 : 0;
   } catch (err) {
     const errorEvent = { type: "error" as const, message: err instanceof Error ? err.message : String(err) };
+    tui.stop();
     if (options.mode === "agent") process.stdout.write(formatJsonl([...events, errorEvent]));
     else console.error(`Review failed: ${errorEvent.message}`);
     return 1;
@@ -94,13 +112,15 @@ function parseReviewArgs(args: string[]): ReviewOptions {
     configFiles: [],
     color: true,
     maxDiffBytes: DEFAULT_MAX_DIFF_BYTES,
-    mode: "plain"
+    mode: "plain",
+    fix: false
   };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--agent") options.mode = "agent";
     else if (arg === "--plain") options.mode = "plain";
-    else if (arg === "--interactive") options.mode = "interactive";
+    else if (arg === "--interactive" || arg === "--tui") options.mode = "interactive";
+    else if (arg === "--fix") options.fix = true;
     else if (arg === "--no-color") options.color = false;
     else if (arg === "-t" || arg === "--type") options.type = parseType(args[++i]);
     else if (arg === "--base") options.base = required(args[++i], arg);
@@ -164,7 +184,7 @@ function printHelp(): void {
   console.log(`crx - local CodeRabbit-style review with Codex CLI
 
 Usage:
-  crx [review] [--agent] [--interactive] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
+  crx [review] [--agent] [--interactive|--tui] [--fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
   crx auth status
   crx config init
 
@@ -172,6 +192,7 @@ Options:
   --dir <path>              Git repository directory
   -c, --config <files...>   Extra instruction files inside the repo
   --max-diff-bytes <n>      Maximum diff bytes sent to Codex
+  --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
 
 Config: ${CONFIG_NAME}`);
