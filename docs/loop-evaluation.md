@@ -549,3 +549,30 @@ This improves the local/CI equivalent of CodeRabbit's repository configuration d
 ### Next recommended slice
 
 Add a small CI-ready fixture/smoke example for `crx config validate` plus a generic quality-gate recipe that validates config before running `crx --agent`.
+
+
+## 2026-05-18 15:01 BST — Loop 17: CI config preflight artifact lock
+
+### Development completed
+
+- Commit `393a49d` (`Preflight config in CI gate helper`).
+- Locked the CI quality-gate docs test so examples preserve `crx config validate --json > crx-config.json` and upload the config preflight artifact with review outputs.
+- Confirmed the shell helper contract includes a config-validation preflight and `CRX_SKIP_CONFIG_VALIDATE` escape hatch.
+
+### Validation
+
+- `npm test` — pass, 70 tests.
+- `npm run build` — pass.
+- Push initially raced with recently pushed helper/docs commits; fetched/rebased safely and pushed the test-lock commit on top of `origin/main`.
+
+### Production-readiness score
+
+**9.25 / 10**. The CI path now has a durable preflight artifact, making failed gates easier to debug and making migration from CodeRabbit-style config more observable.
+
+### CodeRabbit comparison
+
+This continues closing the local/CI operational parity gap: teams can inspect effective config alongside review JSONL, SARIF, and JUnit artifacts. Hosted review comments, dashboards, and team/global learnings remain outside the local clone scope.
+
+### Next recommended slice
+
+Add an end-to-end fixture review that combines config validation, local tool results, and summarize artifacts without requiring an authenticated Codex call.
