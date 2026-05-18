@@ -770,3 +770,35 @@ This is a lightweight local analogue to review metrics/dashboards: enough for tr
 ### Next recommended slice
 
 Run final validation and stop at a clean pushed point unless a critical regression appears.
+
+## 2026-05-18 15:23 BST — Loop 23: Directory-scoped guideline context v0.1
+
+### Development completed
+
+- Commit `d89fc89` (`Add scoped guidelines and metrics helper`).
+- Added directory-scoped auto-loading for common guideline files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`) from the repo root and ancestor directories of reviewed files.
+- Reused the already-filtered reviewed file list so excluded/generated paths do not pull unrelated guideline context into the prompt.
+- Kept slash-containing configured guideline paths as explicit repo-root-relative files for predictable config behavior.
+- Added `scripts/crx-jsonl-metrics.mjs` as a no-build companion to `crx summarize --format json`.
+- Extended E2E/docs coverage to prove `src/AGENTS.md` is loaded for a `src/**` change, metrics helpers are documented, and standalone metrics preserve blocking exit semantics.
+
+### Validation
+
+- `npm test` — pass, 78 tests.
+- `npm run build` — pass.
+- `git diff --check` — pass.
+
+### Production-readiness score
+
+**9.38 / 10**. Guideline context is now better scoped to the actual changed files, which improves review relevance without adding hosted knowledge-base complexity. This closes the most important remaining local subset of CodeRabbit-style code-guideline behavior for agent-run quality gates.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Per-file status/addition/deletion metrics are still deferred.
+- Prompt compaction could trim very large guideline/tool contexts more intelligently.
+- Tool-result-to-finding conversion remains optional if consumers need a single finding stream.
+- Hosted PR comments, dashboards, org learnings, MCP, and cross-repo context remain deferred.
+
+### Chosen next slice
+
+Run another critical review or add per-file status/addition/deletion metadata only if a safe slice remains before 16:20; otherwise wait for the checkpoint at a clean pushed state.
