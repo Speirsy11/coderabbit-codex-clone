@@ -10,8 +10,9 @@ import { parseCodexFindings } from "./parser.js";
 import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
+import { effectiveGuidelineFiles, effectivePathFilters, filesFromDiff, renderPathInstructions } from "./scope.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
-import type { AgentEvent, ReviewOptions, ReviewType } from "./types.js";
+import type { AgentEvent, ReviewContextEvent, ReviewOptions, ReviewType } from "./types.js";
 
 const DEFAULT_MAX_DIFF_BYTES = 180000;
 
@@ -48,14 +49,15 @@ async function review(args: string[]): Promise<number> {
   options.dir = repoDir;
   const config = await loadConfig(repoDir);
   options.maxDiffBytes = options.maxDiffBytes || config.maxDiffBytes || DEFAULT_MAX_DIFF_BYTES;
+  options.pathFilters = effectivePathFilters(config);
   const events: AgentEvent[] = [];
   try {
     events.push(statusEvent("Collecting Git diff."));
     if (options.mode !== "agent") tui.start("Collecting Git diff");
     const collected = await collectDiff(options);
     const redactedDiff = redactSecrets(collected.diff);
-    const context = {
-      type: "review_context" as const,
+    const context: ReviewContextEvent = {
+      type: "review_context",
       repoDir,
       reviewType: options.type,
       base: options.base,
@@ -64,16 +66,23 @@ async function review(args: string[]): Promise<number> {
       truncated: collected.truncated,
       configFiles: options.configFiles,
       untrackedFiles: collected.untrackedFiles,
-      skippedUntrackedFiles: collected.skippedUntrackedFiles
+      skippedUntrackedFiles: collected.skippedUntrackedFiles,
+      excludedFiles: collected.excludedFiles
     };
     events.push(context);
     if (collected.skippedUntrackedFiles.length) {
       events.push(warningEvent("Some untracked files were skipped because they were too large, binary, or unreadable.", collected.skippedUntrackedFiles));
     }
+    if (collected.excludedFiles.length) {
+      events.push(warningEvent("Some files were excluded by path filters.", collected.excludedFiles));
+    }
     events.push(statusEvent("Running Codex review."));
     if (options.mode !== "agent") tui.status("Running Codex review");
-    const configText = await readInstructionFiles(options.configFiles, repoDir);
-    const prompt = buildReviewPrompt({ options, diff: redactedDiff, truncated: collected.truncated, configText, config });
+    const instructionFiles = unique([...options.configFiles, ...(await findAutoInstructionFiles(repoDir, effectiveGuidelineFiles(config)))]);
+    context.instructionFiles = instructionFiles;
+    const configText = await readInstructionFiles(instructionFiles, repoDir);
+    const pathInstructionText = renderPathInstructions(config, filesFromDiff(redactedDiff));
+    const prompt = buildReviewPrompt({ options, diff: redactedDiff, truncated: collected.truncated, configText, pathInstructionText, config });
     const codexOutput = await runCodexExec(prompt, config, repoDir);
     const findings = parseCodexFindings(codexOutput);
     events.push(...findings);
@@ -173,6 +182,24 @@ async function readInstructionFiles(files: string[], repoDir: string): Promise<s
     chunks.push(`# ${file}\n${await readFile(realFilePath, "utf8")}`);
   }
   return chunks.join("\n\n").slice(0, 50000);
+}
+
+async function findAutoInstructionFiles(repoDir: string, candidates: string[]): Promise<string[]> {
+  const found: string[] = [];
+  for (const candidate of candidates) {
+    try {
+      const path = resolve(repoDir, candidate);
+      const info = await lstat(path);
+      if (info.isFile() && !info.isSymbolicLink() && info.size <= 50000) found.push(candidate);
+    } catch {
+      // Missing guideline files are expected.
+    }
+  }
+  return found;
+}
+
+function unique<T>(values: T[]): T[] {
+  return [...new Set(values)];
 }
 
 function parseType(value: string | undefined): ReviewType {

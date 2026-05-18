@@ -109,7 +109,7 @@ crx --fix -t uncommitted
 
 `crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. Review prompts are sent to Codex over stdin rather than process argv. Extra instruction files must stay inside the repo and symlinks are rejected. Auto-fix mode applies only patches that pass `git apply --check`, but you should still inspect the resulting diff before committing.
 
-For `all` and `uncommitted` reviews, small untracked text files are included in the review input. Large, binary, unreadable, and non-file untracked paths are skipped and reported in JSONL context/warning events. If the diff exceeds `--max-diff-bytes`, it is truncated and the truncation is reported in plain and JSONL output.
+For `all` and `uncommitted` reviews, small untracked text files are included in the review input. Large, binary, unreadable, and non-file untracked paths are skipped and reported in JSONL context/warning events. Default path filters exclude generated/dependency/media artifacts such as `node_modules/**`, `dist/**`, lockfiles, minified bundles, source maps, and common binary extensions; add repo-specific filters with `pathFilters` in `crx.config.json`. `pathInstructions` can attach glob-scoped guidance to matching changed files, and common guideline files such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, and `.github/copilot-instructions.md` are auto-loaded when present. If the diff exceeds `--max-diff-bytes`, it is truncated and the truncation is reported in plain and JSONL output.
 
 ## Limitations
 

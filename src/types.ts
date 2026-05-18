@@ -28,6 +28,8 @@ export interface ReviewContextEvent {
   configFiles: string[];
   untrackedFiles?: string[];
   skippedUntrackedFiles?: string[];
+  excludedFiles?: string[];
+  instructionFiles?: string[];
 }
 
 export interface StatusEvent {
@@ -80,6 +82,9 @@ export interface CrxConfig {
   codexCommand?: string;
   reviewPreferences?: string[];
   maxDiffBytes?: number;
+  pathFilters?: string[];
+  pathInstructions?: { pattern: string; instructions: string | string[] }[];
+  codeGuidelines?: { filePatterns?: string[] };
 }
 
 export interface ReviewOptions {
@@ -92,4 +97,5 @@ export interface ReviewOptions {
   maxDiffBytes: number;
   mode: "plain" | "agent" | "interactive";
   fix: boolean;
+  pathFilters?: string[];
 }

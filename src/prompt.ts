@@ -5,6 +5,7 @@ export function buildReviewPrompt(input: {
   diff: string;
   truncated: boolean;
   configText: string;
+  pathInstructionText?: string;
   config: CrxConfig;
 }): string {
   const prefs = input.config.reviewPreferences?.map((p) => `- ${p}`).join("\n") || "- Focus on actionable correctness and security findings.";
@@ -32,6 +33,9 @@ ${prefs}
 
 Additional instruction files:
 ${input.configText || "(none)"}
+
+Path-specific instructions for changed files:
+${input.pathInstructionText || "(none)"}
 
 Diff truncated: ${input.truncated ? "yes" : "no"}
 Review type: ${input.options.type}

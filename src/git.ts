@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { readFile, stat } from "node:fs/promises";
 import { relative, resolve } from "node:path";
+import { filterDiffByPath } from "./scope.js";
 import type { ReviewOptions, ReviewType } from "./types.js";
 
 export interface GitCommand {
@@ -27,13 +28,14 @@ export async function assertGitRepo(dir: string): Promise<string> {
   return result.stdout.trim();
 }
 
-export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {
+export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number; untrackedFiles: string[]; skippedUntrackedFiles: string[]; excludedFiles: string[] }> {
   const diffResult = await collectDiffText(options);
-  const diff = diffResult.diff;
+  const filtered = filterDiffByPath(diffResult.diff, options.pathFilters ?? []);
+  const diff = filtered.diff;
   const bytes = Buffer.byteLength(diff, "utf8");
-  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles };
+  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles, excludedFiles: filtered.excludedFiles };
   const truncated = Buffer.from(diff, "utf8").subarray(0, options.maxDiffBytes).toString("utf8");
-  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles };
+  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles, excludedFiles: filtered.excludedFiles };
 }
 
 async function collectDiffText(options: ReviewOptions): Promise<{ diff: string; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {

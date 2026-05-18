@@ -329,3 +329,17 @@ Remaining high-impact gaps:
 3. Base branch errors still need friendlier remediation for shallow/fresh clones.
 4. Auto-fix applies patches safely, but does not report changed files or pre/post worktree status.
 5. There is no packaged GitHub Actions quality-gate recipe yet.
+
+## 2026-05-18 update — Review scope and instructions v0.3
+
+Implemented from Slice 2:
+
+- Default path filtering for dependency/build/generated/lock/media artifacts before prompt construction.
+- Configurable `pathFilters` and glob-scoped `pathInstructions`.
+- Auto-detected guideline files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.github/copilot-instructions.md`) with safe instruction-file validation.
+- Agent context now reports `excludedFiles` and `instructionFiles`; path-filter skips emit warning events.
+- Added scope unit tests and E2E prompt-capture coverage.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: base-branch remediation in shallow/fresh clones, CI examples, and richer auto-fix worktree status reporting.

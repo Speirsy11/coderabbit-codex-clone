@@ -5,7 +5,7 @@
 ## Data Flow
 
 1. `src/cli.ts` parses commands and options.
-2. `src/git.ts` verifies the selected directory is a Git repo and collects a diff with safe `spawn` arguments.
+2. `src/git.ts` verifies the selected directory is a Git repo and collects a diff with safe `spawn` arguments. `src/scope.ts` filters generated/dependency paths and computes path-specific instruction context.
 3. `src/redact.ts` removes likely secrets from the diff.
 4. `src/config.ts` loads `crx.config.json` and optional review preferences.
 5. `src/prompt.ts` builds a strict JSON-only review prompt.
@@ -20,8 +20,8 @@
 - No OpenAI API key is required by this tool.
 - Commands use `spawn(..., { shell: false })`.
 - Repo-local `codexCommand` is not trusted by default; use `CRX_CODEX_COMMAND` or opt in with `CRX_TRUST_REPO_CODEX_COMMAND=1`.
-- Extra instruction files must resolve inside the repository, must be regular files, and symlinks are rejected.
-- Diffs are redacted before prompt construction.
+- Extra and auto-detected instruction files must resolve inside the repository, must be regular files, and symlinks are rejected.
+- Diffs are path-filtered and redacted before prompt construction.
 - Review prompts are passed via stdin rather than process arguments.
 - Normal review mode is read-only. `--fix` and interactive auto-fix can mutate the worktree, but only after a generated unified diff passes `git apply --check`.
 

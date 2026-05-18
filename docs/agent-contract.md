@@ -38,15 +38,17 @@ Review scope and diff metadata.
   "truncated":false,
   "configFiles":[],
   "untrackedFiles":["src/new.ts"],
-  "skippedUntrackedFiles":[]
+  "skippedUntrackedFiles":[],
+  "excludedFiles":["dist/bundle.js"],
+  "instructionFiles":["AGENTS.md"]
 }
 ```
 
-For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`.
+For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files excluded by path filters are listed in `excludedFiles`. Auto-detected and explicit instruction files are listed in `instructionFiles`.
 
 ### `warning`
 
-Non-fatal quality-gate caveat, such as skipped untracked files.
+Non-fatal quality-gate caveat, such as skipped untracked files or files excluded by path filters.
 
 ```json
 {"type":"warning","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","message":"Some untracked files were skipped because they were too large, binary, or unreadable.","files":["large.bin"]}

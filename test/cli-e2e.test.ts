@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -44,6 +44,22 @@ process.stdin.on("end", () => {
     process.stdout.write(JSON.stringify({ findings: [{ type: "finding", severity: "major", fileName: "app.ts", lineStart: 1, title: "Bad value", message: "Value is unsafe.", impact: "Breaks callers.", codegenInstructions: "Use a safer value.", suggestions: ["Change the value"] }] }));
     return;
   }
+  process.stdout.write(JSON.stringify({ findings: [] }));
+});
+`;
+  await writeFile(path, source);
+  return path;
+}
+
+async function writeCapturingCodex(capturePath: string): Promise<string> {
+  const path = join(await mkdtemp(join(tmpdir(), "crx-mock-")), "capture-codex.mjs");
+  const source = `
+import { writeFileSync } from "node:fs";
+let input = "";
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (chunk) => input += chunk);
+process.stdin.on("end", () => {
+  writeFileSync(${JSON.stringify(capturePath)}, input);
   process.stdout.write(JSON.stringify({ findings: [] }));
 });
 `;
@@ -140,4 +156,34 @@ test("untracked text files are included in uncommitted review context", async ()
   const events = parseJsonl(result.stdout);
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.untrackedFiles, ["new-file.ts"]);
+});
+
+
+test("path filters, path instructions, and auto guidelines shape the review prompt", async () => {
+  const dir = await createRepo();
+  await mkdir(join(dir, "dist"));
+  await mkdir(join(dir, "src"));
+  await writeFile(join(dir, "AGENTS.md"), "Project rule: prefer safe CLI exits.\n");
+  await writeFile(join(dir, "crx.config.json"), JSON.stringify({
+    pathFilters: ["dist/**"],
+    pathInstructions: [{ pattern: "src/**/*.ts", instructions: ["Check TypeScript runtime behavior."] }]
+  }));
+  await writeFile(join(dir, "src", "feature.ts"), "export const feature = true;\n");
+  await writeFile(join(dir, "dist", "bundle.js"), "generated();\n");
+  const capture = join(dir, "prompt.txt");
+  const mock = await writeCapturingCodex(capture);
+
+  const result = runCli(["review", "--agent", "--dir", dir, "--type", "uncommitted"], mock);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const events = parseJsonl(result.stdout);
+  const context = events.find((e) => e.type === "review_context");
+  assert.deepEqual(context.excludedFiles, ["dist/bundle.js"]);
+  assert.ok(context.instructionFiles.includes("AGENTS.md"));
+  assert.equal(events.some((e) => e.type === "warning" && e.files?.includes("dist/bundle.js")), true);
+
+  const prompt = await readFile(capture, "utf8");
+  assert.match(prompt, /Project rule: prefer safe CLI exits/);
+  assert.match(prompt, /Check TypeScript runtime behavior/);
+  assert.match(prompt, /src\/feature\.ts/);
+  assert.doesNotMatch(prompt, /dist\/bundle\.js/);
 });

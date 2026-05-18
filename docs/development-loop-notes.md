@@ -24,3 +24,27 @@ Validation:
 Next evaluation focus:
 
 - Re-read feature matrix/current audit and choose the next P0 gap after Slice 1. Likely candidates: path filters/instructions and auto-detected guideline files from Slice 2, or base-branch remediation if quality-gate reliability seems higher impact.
+
+## 2026-05-18 14:35–14:45 BST — Review scope and instructions v0.3
+
+Evaluation source: `docs/coderabbit-feature-matrix.md` Slice 2 and the updated audit's remaining P0 gap.
+
+Implemented:
+
+- Added default path filters for dependency, build, generated, lock, source-map, minified, media, and archive artifacts.
+- Added config-driven `pathFilters` and glob-scoped `pathInstructions`.
+- Added auto-loading for common local guideline files: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, and `.github/copilot-instructions.md`, plus configured `codeGuidelines.filePatterns`.
+- Added `excludedFiles` and `instructionFiles` to agent `review_context`; path-filter skips emit warning events.
+- Added scope unit tests and an E2E prompt-capture test proving excluded files are omitted, guideline text is loaded, and matching path instructions reach the prompt.
+- Updated README, architecture docs, and agent contract for scope/instruction behavior.
+
+Validation:
+
+- `npm test` passed: 35/35.
+- `npm run build` passed.
+
+Next likely gaps:
+
+- Friendlier base-branch/remediation behavior for shallow/fresh clones.
+- Optional worktree status events around auto-fix.
+- CI examples and documented shell/GitHub Actions usage.
