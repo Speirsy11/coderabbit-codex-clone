@@ -540,3 +540,15 @@ Remaining high-impact gaps:
 1. Optional `.coderabbit.yaml` subset import/mapping.
 2. SARIF/JUnit artifact adapters.
 3. More nuanced per-tool severity mapping.
+
+## 2026-05-18 update — Finding categories v1.0
+
+Implemented:
+
+- Added CodeRabbit-style finding categories: `potential_issue`, `refactor_suggestion`, and `nitpick`.
+- Prompt, parser, JSON Schema, runtime event validation, README, and agent contract now describe the category field.
+- Missing categories are defaulted deterministically for backward compatibility.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: optional `.coderabbit.yaml` subset mapping/import docs, artifact adapters, and deeper per-tool severity mapping.

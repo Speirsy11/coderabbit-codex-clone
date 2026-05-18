@@ -17,3 +17,13 @@ test("recovers array embedded in text", () => {
 test("throws on invalid output", () => {
   assert.throws(() => parseCodexFindings("not json"));
 });
+
+
+test("preserves finding categories and defaults missing categories", () => {
+  const findings = parseCodexFindings(JSON.stringify({ findings: [
+    { severity: "minor", category: "refactor_suggestion", fileName: "a.ts", title: "Simplify", message: "Can simplify" },
+    { severity: "major", fileName: "b.ts", title: "Bug", message: "Breaks" }
+  ] }));
+  assert.equal(findings[0].category, "refactor_suggestion");
+  assert.equal(findings[1].category, "potential_issue");
+});

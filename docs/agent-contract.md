@@ -64,7 +64,7 @@ Emitted for each configured local tool command before the Codex review. Commands
 
 ### `finding`
 
-A validated Codex finding. Severity is one of `critical`, `major`, `minor`, `trivial`, or `info`.
+A validated Codex finding. Severity is one of `critical`, `major`, `minor`, `trivial`, or `info`. Optional `category` is one of `potential_issue`, `refactor_suggestion`, or `nitpick`; missing categories are treated as `potential_issue` for critical/major findings and `nitpick` otherwise.
 
 ```json
 {
@@ -72,6 +72,7 @@ A validated Codex finding. Severity is one of `critical`, `major`, `minor`, `tri
   "protocolVersion":"0.2",
   "schemaVersion":"crx.agent.v0.2",
   "severity":"major",
+  "category":"potential_issue",
   "fileName":"src/app.ts",
   "lineStart":42,
   "title":"Missing null guard",

@@ -127,3 +127,24 @@ Validation:
 Next likely gap:
 
 - More preset coverage only if needed; otherwise focus on docs/schema consistency and polish.
+
+## 2026-05-18 15:40–15:50 BST — Finding categories v1.0
+
+Evaluation source: feature-matrix gap for CodeRabbit-style review types: potential issues, refactor suggestions, and nitpicks.
+
+Implemented:
+
+- Added optional finding `category`: `potential_issue`, `refactor_suggestion`, or `nitpick`.
+- Prompt now asks Codex to classify findings by category in addition to severity.
+- Parser preserves valid categories and defaults missing categories to `potential_issue` for critical/major findings and `nitpick` otherwise.
+- Agent event schema and runtime validation now accept category values.
+- Added parser tests and contract docs.
+
+Validation:
+
+- `npm test` passed.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Optional `.coderabbit.yaml` subset mapping/import docs, or artifact adapters such as SARIF/JUnit.
