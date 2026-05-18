@@ -802,3 +802,59 @@ Run final validation and stop at a clean pushed point unless a critical regressi
 ### Chosen next slice
 
 Run another critical review or add per-file status/addition/deletion metadata only if a safe slice remains before 16:20; otherwise wait for the checkpoint at a clean pushed state.
+
+## 2026-05-18 15:15 BST — Loop 24: Changed-file stats in agent artifacts
+
+### Development completed
+
+- Added `review_context.changedFileStats` with per-reviewed-file status plus additions/deletions, computed after path filtering and before diff truncation.
+- Reused that metadata in `crx summarize --format json` and `scripts/crx-jsonl-metrics.mjs` so CI metrics artifacts expose changed-file totals by status and line churn.
+- Tightened synthetic untracked-file diffs so trailing newlines do not inflate addition counts.
+- Updated runtime validation, JSON Schema, agent-contract docs, CI metrics docs, and regression tests.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+- `git diff --check` — pending for this slice.
+
+### Production-readiness score
+
+**9.39 / 10**. Agents and CI dashboards now have exact reviewed-file metadata without parsing patches themselves, closing the previously deferred per-file status/addition/deletion artifact gap for the local quality gate.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Prompt compaction/truncation metadata for very large contexts remains optional polish.
+- Converting local tool failures into synthetic findings remains optional for consumers that require a single finding stream.
+- Hosted PR comments, dashboards, org learnings, MCP, cross-repo context, and managed execution remain intentionally out of scope.
+
+### Chosen next slice
+
+Run validation, commit, and push. If another slice is needed later, prefer prompt compaction metadata or tool-failure-to-finding conversion.
+
+
+## 2026-05-18 15:47 BST — Loop 24: Changed-file stats metrics
+
+### Development completed
+
+- Commits `cb9e517` (`Add changed-file stats to review metrics`) and `5e5d651` (`test: cover changed-file stats validation`).
+- Added per-file `changedFileStats` to `review_context` with file name, added/modified/deleted/renamed status, additions, and deletions.
+- Propagated changed-file totals into `crx summarize --format json` and `scripts/crx-jsonl-metrics.mjs` for dashboard/history artifacts.
+- Updated JSON schema, runtime event validation, agent contract docs, CI docs, and tests.
+
+### Validation
+
+- `npm test` — pass, 79 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.40 / 10**. CI artifacts now have enough file-level change metadata to trend review size and risk without parsing raw diffs downstream.
+
+### CodeRabbit comparison
+
+This strengthens the local metrics/dashboard analogue while keeping hosted analytics and PR UI out of scope. It also makes agent-run evaluations more auditable because reviewed files now include size/status hints.
+
+### Next recommended slice
+
+Only safe polish remains: prompt compaction for very large guideline/tool context, or final critical review plus wait until the 16:20 checkpoint.
