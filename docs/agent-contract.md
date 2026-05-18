@@ -43,6 +43,7 @@ Review scope and diff metadata.
   "changedFilesCount":3,
   "reviewedFilesCount":2,
   "excludedFilesCount":1,
+  "excludedFileStats":[{"fileName":"dist/bundle.js","status":"modified","additions":1,"deletions":1}],
   "untrackedFiles":["src/new.ts"],
   "skippedUntrackedFiles":[],
   "excludedFiles":["dist/bundle.js"],
@@ -50,7 +51,7 @@ Review scope and diff metadata.
 }
 ```
 
-`changedFiles` lists the files actually included in the reviewed diff before truncation; `changedFileStats` adds per-reviewed-file status plus additions/deletions; `changedFilesCount` is the reviewed plus excluded total, and `reviewedFilesCount`/`excludedFilesCount` split that total for CI artifact metadata. For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files, directory-scoped guideline files along reviewed paths, and explicit `-c/--config` files are listed in `instructionFiles`. Very large instruction and local-tool prompt sections are compacted with explicit `CRX_*_TRUNCATED` markers before sending to Codex. For directory-scoped guideline names such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `.cursorrules`, crx loads matching files from the repo root and ancestor directories of reviewed files, so `src/AGENTS.md` can guide reviews that touch `src/**` without affecting unrelated paths. The effective config file is listed in `configSource` when one is found (`crx.config.json`, `.coderabbit.yaml`, or `.coderabbit.yml`).
+`changedFiles` lists the files actually included in the reviewed diff before truncation; `changedFileStats` adds per-reviewed-file status plus additions/deletions. `excludedFileStats` provides the same status/addition/deletion metadata for files removed by path filters, which helps CI summaries explain what was intentionally left out. `changedFilesCount` is the reviewed plus excluded total, and `reviewedFilesCount`/`excludedFilesCount` split that total for CI artifact metadata. For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`; default filters cover common dependency/build/cache directories, lockfiles, generated outputs, sourcemaps, archives, fonts, binaries, and media assets. Auto-detected guideline files, directory-scoped guideline files along reviewed paths, and explicit `-c/--config` files are listed in `instructionFiles`. Very large instruction and local-tool prompt sections are compacted with explicit `CRX_*_TRUNCATED` markers before sending to Codex. For directory-scoped guideline names such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `.cursorrules`, crx loads matching files from the repo root and ancestor directories of reviewed files, so `src/AGENTS.md` can guide reviews that touch `src/**` without affecting unrelated paths. The effective config file is listed in `configSource` when one is found (`crx.config.json`, `.coderabbit.yaml`, or `.coderabbit.yml`).
 
 ### `warning`
 

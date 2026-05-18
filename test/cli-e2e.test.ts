@@ -267,6 +267,7 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   const events = parseJsonl(result.stdout);
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.excludedFiles, ["dist/bundle.js"]);
+  assert.deepEqual(context.excludedFileStats, [{ fileName: "dist/bundle.js", status: "added", additions: 1, deletions: 0 }]);
   assert.deepEqual(context.changedFiles, ["crx.config.json", "src/feature.ts"]);
   assert.deepEqual(context.changedFileStats.map((item) => item.fileName), ["crx.config.json", "src/feature.ts"]);
   assert.equal(context.changedFileStats.every((item) => item.status === "added"), true);

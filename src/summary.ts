@@ -33,6 +33,7 @@ export function summarizeAgentJsonl(input: string): string {
 export interface AgentJsonlMetrics {
   findings: { total: number; bySeverity: Record<Severity, number>; byCategory: Record<FindingCategory | "uncategorized", number>; blocking: number };
   changedFiles: { total: number; additions: number; deletions: number; byStatus: Record<"added" | "modified" | "deleted" | "renamed", number> };
+  excludedFiles: { total: number; additions: number; deletions: number; byStatus: Record<"added" | "modified" | "deleted" | "renamed", number> };
   localTools: { total: number; failed: number; blockingFailures: number; timedOut: number; byPhase: Record<"pre_review" | "post_autofix", number> };
   complete?: { summary: string; exitCode?: number; needsRerun?: boolean; autoFixApplied?: boolean };
   errors: string[];
@@ -48,6 +49,7 @@ export function summarizeAgentJsonlMetrics(input: string): AgentJsonlMetrics {
     ["uncategorized", findings.filter((finding) => !finding.category).length] as const
   ]) as Record<FindingCategory | "uncategorized", number>;
   const changedFileStats = events.flatMap((event) => event.type === "review_context" ? event.changedFileStats ?? [] : []);
+  const excludedFileStats = events.flatMap((event) => event.type === "review_context" ? event.excludedFileStats ?? [] : []);
   return {
     findings: { total: findings.length, bySeverity, byCategory, blocking: findings.filter(isBlockingFinding).length },
     changedFiles: {
@@ -61,6 +63,7 @@ export function summarizeAgentJsonlMetrics(input: string): AgentJsonlMetrics {
         renamed: changedFileStats.filter((stat) => stat.status === "renamed").length
       }
     },
+    excludedFiles: fileStatMetrics(excludedFileStats),
     localTools: {
       total: tools.length,
       failed: failedTools.length,
@@ -114,6 +117,20 @@ function analyzeAgentEvents(events: AgentEvent[]) {
   const complete = [...events].reverse().find((event) => event.type === "complete");
   const errors = events.filter((event) => event.type === "error");
   return { findings, tools, failedTools, blockingTools, complete, errors };
+}
+
+function fileStatMetrics(stats: { status: "added" | "modified" | "deleted" | "renamed"; additions: number; deletions: number }[]): AgentJsonlMetrics["changedFiles"] {
+  return {
+    total: stats.length,
+    additions: stats.reduce((sum, stat) => sum + stat.additions, 0),
+    deletions: stats.reduce((sum, stat) => sum + stat.deletions, 0),
+    byStatus: {
+      added: stats.filter((stat) => stat.status === "added").length,
+      modified: stats.filter((stat) => stat.status === "modified").length,
+      deleted: stats.filter((stat) => stat.status === "deleted").length,
+      renamed: stats.filter((stat) => stat.status === "renamed").length
+    }
+  };
 }
 
 function isBlockingFinding(finding: Finding): boolean {

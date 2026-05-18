@@ -857,3 +857,31 @@ Only safe polish remains: prompt compaction for very large guideline/tool contex
 ### Chosen next slice
 
 Validate, commit, push, and stop at a clean state unless the requester asks for another loop.
+
+## 2026-05-18 15:27 BST — Loop 26: Path-filter auditability polish
+
+### Development completed
+
+- Expanded default path filters for generated outputs, lockfiles, caches/build directories, archives, binaries, fonts, and media assets.
+- Fixed basename-only glob filters so patterns such as `*.png`, `*.wasm`, and `*.generated.*` also match nested paths.
+- Added `excludedFileStats` to `review_context`, runtime validation, JSON schema/docs, `collectDiff`, CLI JSONL output, and compact metrics summaries.
+- Updated E2E/unit coverage for excluded-file stats and default filter behavior.
+
+### Validation
+
+- `npm test` — pass, 81 tests.
+- `npm run build` — pass.
+- `git diff --check` — pass.
+
+### Production-readiness score
+
+**9.42 / 10**. The local/CI quality gate is now quieter by default and more auditable: excluded generated/binary/media changes are kept out of prompts while remaining visible in machine-readable artifacts.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Local tool failures remain separate `tool_result` events rather than synthetic findings.
+- Richer hosted UX, dashboards/history, organization learnings, MCP, cross-repo context, and PR comment workflows remain intentionally out of scope.
+
+### Chosen next slice
+
+If another supervised slice is requested, the best remaining local/CI improvement is converting blocking local-tool failures into synthetic finding/SARIF/JUnit entries or enriching rerun verification artifacts. Otherwise stop at a clean pushed state.

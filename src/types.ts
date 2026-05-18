@@ -45,6 +45,7 @@ export interface ReviewContextEvent {
   untrackedFiles?: string[];
   skippedUntrackedFiles?: string[];
   excludedFiles?: string[];
+  excludedFileStats?: ChangedFileStat[];
   instructionFiles?: string[];
 }
 

@@ -28,16 +28,16 @@ export async function assertGitRepo(dir: string): Promise<string> {
   return result.stdout.trim();
 }
 
-export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number; changedFiles: string[]; changedFileStats: ChangedFileStat[]; untrackedFiles: string[]; skippedUntrackedFiles: string[]; excludedFiles: string[] }> {
+export async function collectDiff(options: ReviewOptions): Promise<{ diff: string; truncated: boolean; bytes: number; changedFiles: string[]; changedFileStats: ChangedFileStat[]; untrackedFiles: string[]; skippedUntrackedFiles: string[]; excludedFiles: string[]; excludedFileStats: ChangedFileStat[] }> {
   const diffResult = await collectDiffText(options);
   const filtered = filterDiffByPath(diffResult.diff, options.pathFilters ?? []);
   const diff = filtered.diff;
   const changedFileStats = fileStatsFromDiff(diff);
   const changedFiles = filesFromDiff(diff);
   const bytes = Buffer.byteLength(diff, "utf8");
-  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes, changedFiles, changedFileStats, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles, excludedFiles: filtered.excludedFiles };
+  if (bytes <= options.maxDiffBytes) return { diff, truncated: false, bytes, changedFiles, changedFileStats, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles, excludedFiles: filtered.excludedFiles, excludedFileStats: filtered.excludedFileStats };
   const truncated = Buffer.from(diff, "utf8").subarray(0, options.maxDiffBytes).toString("utf8");
-  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes, changedFiles, changedFileStats, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles, excludedFiles: filtered.excludedFiles };
+  return { diff: `${truncated}\n\n[CRX_DIFF_TRUNCATED at ${options.maxDiffBytes} bytes]\n`, truncated: true, bytes, changedFiles, changedFileStats, untrackedFiles: diffResult.untrackedFiles, skippedUntrackedFiles: diffResult.skippedUntrackedFiles, excludedFiles: filtered.excludedFiles, excludedFileStats: filtered.excludedFileStats };
 }
 
 async function collectDiffText(options: ReviewOptions): Promise<{ diff: string; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {

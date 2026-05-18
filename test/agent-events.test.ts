@@ -38,7 +38,9 @@ test("agent event validator accepts review_context changedFileStats", () => {
     diffBytes: 42,
     truncated: false,
     configFiles: [],
-    changedFileStats: [{ fileName: "src/app.ts", status: "modified", additions: 2, deletions: 1 }]
+    changedFileStats: [{ fileName: "src/app.ts", status: "modified", additions: 2, deletions: 1 }],
+    excludedFiles: ["dist/app.js"],
+    excludedFileStats: [{ fileName: "dist/app.js", status: "modified", additions: 10, deletions: 4 }]
   });
   assert.deepEqual(errors, []);
 });

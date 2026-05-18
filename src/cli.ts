@@ -80,6 +80,7 @@ async function review(args: string[]): Promise<number> {
       changedFilesCount: collected.changedFiles.length + collected.excludedFiles.length,
       reviewedFilesCount: collected.changedFiles.length,
       excludedFilesCount: collected.excludedFiles.length,
+      excludedFileStats: collected.excludedFileStats,
       untrackedFiles: collected.untrackedFiles,
       skippedUntrackedFiles: collected.skippedUntrackedFiles,
       excludedFiles: collected.excludedFiles

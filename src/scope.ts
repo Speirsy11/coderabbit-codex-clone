@@ -1,27 +1,87 @@
 import type { ChangedFileStat, CrxConfig } from "./types.js";
 
 export const DEFAULT_PATH_FILTERS = [
-  "node_modules/**",
-  "dist/**",
+  // Dependency, build, coverage, and cache directories.
+  ".cache/**",
+  ".next/**",
+  ".nuxt/**",
+  ".pytest_cache/**",
+  ".ruff_cache/**",
+  "__pycache__/**",
+  "**/.cache/**",
+  "**/.next/**",
+  "**/.nuxt/**",
+  "**/.pytest_cache/**",
+  "**/.ruff_cache/**",
+  "**/__pycache__/**",
   "build/**",
   "coverage/**",
+  "dist/**",
+  "node_modules/**",
+  "out/**",
+  "target/**",
   "vendor/**",
+  "**/target/**",
+  "**/vendor/**",
+
+  // Common lockfiles and generated source/map artifacts.
+  "*.generated.*",
+  "*.gen.*",
   "*.lock",
+  "**/*.generated.*",
+  "**/*.gen.*",
+  "**/*.min.js",
+  "**/*.map",
+  "**/*_pb2.py",
+  "**/*.pb.go",
+  "Cargo.lock",
+  "Gemfile.lock",
+  "Pipfile.lock",
+  "composer.lock",
+  "go.sum",
   "package-lock.json",
   "pnpm-lock.yaml",
+  "poetry.lock",
   "yarn.lock",
-  "*.min.js",
-  "*.map",
-  "*.png",
-  "*.jpg",
-  "*.jpeg",
+
+  // Binary, archive, font, and media assets that should not enter prompts.
+  "*.7z",
+  "*.avi",
+  "*.bmp",
+  "*.class",
+  "*.dll",
+  "*.dmg",
+  "*.docx",
+  "*.dylib",
+  "*.eot",
+  "*.exe",
   "*.gif",
-  "*.webp",
+  "*.gz",
   "*.ico",
+  "*.jar",
+  "*.jpeg",
+  "*.jpg",
+  "*.mov",
+  "*.mp3",
+  "*.mp4",
+  "*.otf",
   "*.pdf",
-  "*.zip",
+  "*.png",
+  "*.pptx",
+  "*.pyc",
+  "*.rar",
+  "*.so",
   "*.tar",
-  "*.gz"
+  "*.tgz",
+  "*.ttf",
+  "*.wasm",
+  "*.wav",
+  "*.webm",
+  "*.webp",
+  "*.woff",
+  "*.woff2",
+  "*.xlsx",
+  "*.zip"
 ];
 
 export function effectivePathFilters(config: CrxConfig): string[] {
@@ -32,22 +92,25 @@ export function effectiveGuidelineFiles(config: CrxConfig): string[] {
   return unique(["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursorrules", ".github/copilot-instructions.md", ...(config.codeGuidelines?.filePatterns ?? [])]);
 }
 
-export function filterDiffByPath(diff: string, excludePatterns: string[]): { diff: string; excludedFiles: string[] } {
+export function filterDiffByPath(diff: string, excludePatterns: string[]): { diff: string; excludedFiles: string[]; excludedFileStats: ChangedFileStat[] } {
   const chunks = splitDiffChunks(diff);
-  if (!chunks.length) return { diff, excludedFiles: [] };
+  if (!chunks.length) return { diff, excludedFiles: [], excludedFileStats: [] };
 
   const kept: string[] = [];
   const excludedFiles: string[] = [];
+  const excludedFileStats: ChangedFileStat[] = [];
   for (const chunk of chunks) {
     const file = diffChunkPath(chunk);
     if (file && excludePatterns.some((pattern) => matchGlob(pattern, file))) {
       excludedFiles.push(file);
+      const stats = diffChunkStats(chunk);
+      if (stats) excludedFileStats.push(stats);
     } else {
       kept.push(chunk);
     }
   }
 
-  return { diff: kept.join("\n"), excludedFiles: unique(excludedFiles) };
+  return { diff: kept.join("\n"), excludedFiles: unique(excludedFiles), excludedFileStats: uniqueFileStats(excludedFileStats) };
 }
 
 export function filesFromDiff(diff: string): string[] {
@@ -91,7 +154,12 @@ export function matchGlob(pattern: string, file: string): boolean {
   const normalizedPattern = pattern.replace(/\\/g, "/");
   const normalizedFile = file.replace(/\\/g, "/");
   const regex = new RegExp(`^${escapeGlob(normalizedPattern)}$`);
-  return regex.test(normalizedFile);
+  if (regex.test(normalizedFile)) return true;
+  if (!normalizedPattern.includes("/")) {
+    const basename = normalizedFile.split("/").pop() ?? normalizedFile;
+    return regex.test(basename);
+  }
+  return false;
 }
 
 function splitDiffChunks(diff: string): string[] {
@@ -148,4 +216,13 @@ function escapeGlob(pattern: string): string {
 
 function unique(values: string[]): string[] {
   return [...new Set(values)].sort();
+}
+
+function uniqueFileStats(values: ChangedFileStat[]): ChangedFileStat[] {
+  const seen = new Set<string>();
+  return values.filter((stat) => {
+    if (seen.has(stat.fileName)) return false;
+    seen.add(stat.fileName);
+    return true;
+  }).sort((a, b) => a.fileName.localeCompare(b.fileName));
 }

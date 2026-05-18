@@ -28,6 +28,7 @@ const failedTools = tools.filter((tool) => !tool.passed);
 const blockingTools = failedTools.filter((tool) => tool.blocking !== false);
 const blockingFindings = findings.filter((finding) => finding.severity === "critical" || finding.severity === "major");
 const changedFileStats = events.flatMap((event) => event.type === "review_context" ? event.changedFileStats ?? [] : []);
+const excludedFileStats = events.flatMap((event) => event.type === "review_context" ? event.excludedFileStats ?? [] : []);
 
 const metrics = {
   findings: {
@@ -39,17 +40,8 @@ const metrics = {
     ]),
     blocking: blockingFindings.length
   },
-  changedFiles: {
-    total: changedFileStats.length,
-    additions: changedFileStats.reduce((sum, stat) => sum + stat.additions, 0),
-    deletions: changedFileStats.reduce((sum, stat) => sum + stat.deletions, 0),
-    byStatus: {
-      added: changedFileStats.filter((stat) => stat.status === "added").length,
-      modified: changedFileStats.filter((stat) => stat.status === "modified").length,
-      deleted: changedFileStats.filter((stat) => stat.status === "deleted").length,
-      renamed: changedFileStats.filter((stat) => stat.status === "renamed").length
-    }
-  },
+  changedFiles: fileStatMetrics(changedFileStats),
+  excludedFiles: fileStatMetrics(excludedFileStats),
   localTools: {
     total: tools.length,
     failed: failedTools.length,
@@ -69,6 +61,20 @@ const metrics = {
   errors: errors.map((event) => event.message ?? "unknown error"),
   exitCode: errors.length ? 1 : typeof complete?.exitCode === "number" ? complete.exitCode : blockingFindings.length || blockingTools.length ? 3 : complete?.needsRerun ? 4 : 0
 };
+
+function fileStatMetrics(stats) {
+  return {
+    total: stats.length,
+    additions: stats.reduce((sum, stat) => sum + stat.additions, 0),
+    deletions: stats.reduce((sum, stat) => sum + stat.deletions, 0),
+    byStatus: {
+      added: stats.filter((stat) => stat.status === "added").length,
+      modified: stats.filter((stat) => stat.status === "modified").length,
+      deleted: stats.filter((stat) => stat.status === "deleted").length,
+      renamed: stats.filter((stat) => stat.status === "renamed").length
+    }
+  };
+}
 
 console.log(JSON.stringify(metrics, null, 2));
 process.exitCode = metrics.exitCode;

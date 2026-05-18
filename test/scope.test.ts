@@ -5,6 +5,8 @@ import { DEFAULT_PATH_FILTERS, effectiveGuidelineFiles, filterDiffByPath, filesF
 test("matches common glob patterns", () => {
   assert.equal(matchesPathPattern("src/app/main.ts", "src/**/*.ts"), true);
   assert.equal(matchesPathPattern("node_modules/pkg/index.js", "node_modules/**"), true);
+  assert.equal(matchesPathPattern("assets/logo.png", "*.png"), true);
+  assert.equal(matchesPathPattern("src/api/user.generated.ts", "*.generated.*"), true);
   assert.equal(matchesPathPattern("package-lock.json", "package-lock.json"), true);
   assert.equal(matchesPathPattern("src/app/main.ts", "test/**/*.ts"), false);
 });
@@ -29,6 +31,20 @@ test("filters diff blocks by path", () => {
   assert.match(result.diff, /src\/app\.ts/);
   assert.doesNotMatch(result.diff, /dist\/app\.js/);
   assert.deepEqual(result.excludedFiles, ["dist/app.js"]);
+  assert.deepEqual(result.excludedFileStats, [{ fileName: "dist/app.js", status: "modified", additions: 1, deletions: 1 }]);
+});
+
+test("default filters exclude nested generated, lock, binary, and media paths", () => {
+  for (const file of [
+    "src/api/client.generated.ts",
+    "assets/images/logo.png",
+    "frontend/yarn.lock",
+    "cache/data.wasm",
+    "lib/__pycache__/mod.pyc",
+    "target/release/app"
+  ]) {
+    assert.equal(DEFAULT_PATH_FILTERS.some((pattern) => matchesPathPattern(file, pattern)), true, file);
+  }
 });
 
 test("renders only path instructions that match changed files", () => {
