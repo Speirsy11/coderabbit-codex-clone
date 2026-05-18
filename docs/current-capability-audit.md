@@ -692,3 +692,14 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: final smoke review and generated-schema validator exploration.
+
+## 2026-05-18 update — Complete event blocker counts v1.0
+
+Implemented:
+
+- Added `blockingFindingsCount` and `blockingToolsCount` to `complete` events.
+- Counts are emitted by review mode and covered by schema, runtime validation, docs, and E2E tests.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: final smoke review and generated-schema validator exploration.

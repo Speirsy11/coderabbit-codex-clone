@@ -110,6 +110,8 @@
         "required": ["findingsCount", "summary"],
         "properties": {
           "findingsCount": { "type": "integer", "minimum": 0 },
+          "blockingFindingsCount": { "type": "integer", "minimum": 0 },
+          "blockingToolsCount": { "type": "integer", "minimum": 0 },
           "summary": { "type": "string" },
           "autoFixApplied": { "type": "boolean" },
           "needsRerun": { "type": "boolean" },

@@ -70,6 +70,8 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       break;
     case "complete":
       requireNumber(value, "findingsCount", errors, { integer: true, min: 0 });
+      optionalNonNegativeInteger(value, "blockingFindingsCount", errors);
+      optionalNonNegativeInteger(value, "blockingToolsCount", errors);
       requireString(value, "summary", errors);
       optionalBoolean(value, "autoFixApplied", errors);
       optionalBoolean(value, "needsRerun", errors);
@@ -109,6 +111,11 @@ function requireNumber(value: Record<string, unknown>, field: string, errors: st
   }
   if (options.integer && !Number.isInteger(n)) errors.push(`${field} must be an integer`);
   if (options.min !== undefined && n < options.min) errors.push(`${field} must be >= ${options.min}`);
+}
+
+function optionalNonNegativeInteger(value: Record<string, unknown>, field: string, errors: string[]): void {
+  if (value[field] === undefined) return;
+  requireNumber(value, field, errors, { integer: true, min: 0 });
 }
 
 function optionalPositiveInteger(value: Record<string, unknown>, field: string, errors: string[]): void {

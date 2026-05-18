@@ -56,6 +56,8 @@ export interface CompleteEvent {
   protocolVersion?: string;
   schemaVersion?: string;
   findingsCount: number;
+  blockingFindingsCount?: number;
+  blockingToolsCount?: number;
   summary: string;
   autoFixApplied?: boolean;
   needsRerun?: boolean;

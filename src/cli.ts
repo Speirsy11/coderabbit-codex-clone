@@ -123,9 +123,11 @@ async function review(args: string[]): Promise<number> {
       if (options.mode !== "agent") process.stdout.write(`${renderAutoFixResult(result)}\n`);
     }
 
+    const blockingFindingsCount = findings.filter((finding) => finding.severity === "critical" || finding.severity === "major").length;
+    const blockingToolsCount = toolResults.filter((result) => result.blocking !== false && !result.passed).length;
     const blockingToolFailures = hasBlockingToolFailures(toolResults);
     const summary = blockingToolFailures ? `${findings.length} finding(s); blocking local tool failure.` : `${findings.length} finding(s).`;
-    events.push({ type: "complete", findingsCount: findings.length, summary, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
+    events.push({ type: "complete", findingsCount: findings.length, blockingFindingsCount, blockingToolsCount, summary, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
     if (options.mode === "agent") process.stdout.write(formatJsonl(events));
     return autoFixApplied ? 4 : hasBlockingFindings(findings) || blockingToolFailures ? 3 : 0;
   } catch (err) {

@@ -327,3 +327,22 @@ Validation:
 Next likely gap:
 
 - Final smoke review / generated-schema validator exploration.
+
+## 2026-05-18 15:02 BST — Complete event blocker counts v1.0
+
+Evaluation source: final agent ergonomics pass after artifacts and config-source reporting. Agents should not need to re-count events to route pass/fail summaries.
+
+Implemented:
+
+- Added optional `blockingFindingsCount` and `blockingToolsCount` to `complete` events.
+- Review completion now populates both counts.
+- Updated runtime validation, JSON schema, agent contract docs, and E2E assertions.
+
+Validation:
+
+- `npm test` passed: 72/72.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Final smoke review or generated-schema validator exploration.

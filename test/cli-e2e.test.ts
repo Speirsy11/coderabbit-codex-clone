@@ -170,6 +170,8 @@ test("agent mode exits 3 and emits finding for blocking findings", async () => {
   const events = parseJsonl(result.stdout);
   assert.equal(events.find((e) => e.type === "finding")?.severity, "major");
   assert.equal(events.at(-1).type, "complete");
+  assert.equal(events.at(-1).blockingFindingsCount, 1);
+  assert.equal(events.at(-1).blockingToolsCount, 0);
 });
 
 test("agent mode emits error event for invalid Codex output", async () => {
@@ -267,6 +269,7 @@ test("local tool failures emit JSONL tool_result and fail the gate", async () =>
   assert.equal(toolResult.passed, false);
   assert.equal(toolResult.blocking, true);
   assert.equal(events.at(-1).type, "complete");
+  assert.equal(events.at(-1).blockingToolsCount, 1);
 
   const prompt = await readFile(capture, "utf8");
   assert.match(prompt, /Local tool results:/);
