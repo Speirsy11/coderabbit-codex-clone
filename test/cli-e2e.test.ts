@@ -102,6 +102,20 @@ test("summarize prints JSONL artifact overview", async () => {
   assert.match(result.stdout, /Findings: 0/);
 });
 
+test("summarize artifact formats preserve blocking exit codes", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-summary-"));
+  const file = join(dir, "review.jsonl");
+  await writeFile(file, `${JSON.stringify({ type: "finding", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", severity: "major", category: "potential_issue", fileName: "src/app.ts", lineStart: 4, title: "Crash", message: "bad", impact: "boom", codegenInstructions: "fix", suggestions: [] })}\n`);
+
+  const sarif = runCli(["summarize", "--format", "sarif", file]);
+  assert.equal(sarif.status, 3, sarif.stderr);
+  assert.equal(JSON.parse(sarif.stdout).runs[0].results[0].level, "error");
+
+  const junit = runCli(["summarize", "--format", "junit", file]);
+  assert.equal(junit.status, 3, junit.stderr);
+  assert.match(junit.stdout, /<testsuite name="crx"/);
+});
+
 test("invalid review option exits with controlled error and no stack trace", () => {
   const result = runCli(["review", "--bad-option"]);
   assert.equal(result.status, 1);
