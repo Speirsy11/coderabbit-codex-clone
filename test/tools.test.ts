@@ -20,10 +20,12 @@ test("reports blocking failures and renders prompt context", async () => {
   const results = await runLocalTools([{ name: "lint", command: [process.execPath, "-e", "console.error('lint failed'); process.exit(2)"] }], process.cwd());
   assert.equal(results[0].exitCode, 2);
   assert.equal(results[0].passed, false);
+  assert.equal(results[0].severity, "major");
   assert.equal(hasBlockingToolFailures(results), true);
   const prompt = renderToolResultsForPrompt(results);
   assert.match(prompt, /## lint/);
   assert.match(prompt, /failed with exit 2/);
+  assert.match(prompt, /Severity: major/);
   assert.match(prompt, /lint failed/);
 });
 
@@ -31,5 +33,20 @@ test("non-blocking tool failures do not fail the gate", async () => {
   const results = await runLocalTools([{ name: "advisory", command: [process.execPath, "-e", "process.exit(9)"], blocking: false }], process.cwd());
   assert.equal(results[0].passed, false);
   assert.equal(results[0].blocking, false);
+  assert.equal(results[0].severity, "minor");
   assert.equal(hasBlockingToolFailures(results), false);
+});
+
+
+test("times out local tools that ignore SIGTERM", async () => {
+  const results = await runLocalTools([{
+    name: "hang",
+    command: [process.execPath, "-e", "process.on('SIGTERM', () => {}); setInterval(() => {}, 1000);"],
+    timeoutMs: 25
+  }], process.cwd());
+  assert.equal(results[0].passed, false);
+  assert.equal(results[0].timedOut, true);
+  assert.equal(results[0].exitCode, 124);
+  assert.equal(results[0].severity, "major");
+  assert.match(renderToolResultsForPrompt(results), /Status: timed out/);
 });

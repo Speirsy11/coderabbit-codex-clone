@@ -249,3 +249,23 @@ Validation:
 Next likely gap:
 
 - Schema/docs consistency checks, generated validator exploration, or additional CI publishing examples.
+
+## 2026-05-18 16:20 BST — Config validate preflight v1.0
+
+Evaluation source: schema/docs/config consistency gap after adding native and CodeRabbit-style config paths.
+
+Implemented:
+
+- Added `crx config validate [--json] [--dir path]`.
+- The command loads the same effective config used by review, reports the source file or defaults, and prints sanitized config with `--json`.
+- Invalid native config JSON exits cleanly with the existing controlled error path.
+- Added E2E tests and docs for CI preflight usage.
+
+Validation:
+
+- `npm test` passed: 69/69.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Final smoke review / docs consistency pass, or handoff at the requested 16:20 checkpoint if wall-clock time has arrived.

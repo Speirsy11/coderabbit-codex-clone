@@ -116,6 +116,26 @@ test("summarize artifact formats preserve blocking exit codes", async () => {
   assert.match(junit.stdout, /<testsuite name="crx"/);
 });
 
+test("config validate prints sanitized config JSON", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-config-"));
+  await writeFile(join(dir, ".coderabbit.yaml"), "reviews:\n  profile: assertive\n");
+  const result = runCli(["config", "validate", "--json", "--dir", dir]);
+  assert.equal(result.status, 0, result.stderr);
+  const parsed = JSON.parse(result.stdout);
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.source, ".coderabbit.yaml");
+  assert.equal(parsed.config.reviewProfile, "assertive");
+});
+
+test("config validate reports invalid config cleanly", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-config-"));
+  await writeFile(join(dir, "crx.config.json"), "{not-json");
+  const result = runCli(["config", "validate", "--dir", dir]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Invalid crx\.config\.json/);
+  assert.doesNotMatch(result.stderr, /at .*src\/cli|Error:/);
+});
+
 test("invalid review option exits with controlled error and no stack trace", () => {
   const result = runCli(["review", "--bad-option"]);
   assert.equal(result.status, 1);

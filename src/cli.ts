@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { lstat, readFile, realpath, stat } from "node:fs/promises";
+import { access, lstat, readFile, realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { applyPatch, buildAutoFixPrompt, extractUnifiedDiff } from "./autofix.js";
 import { codexAuthStatus, runCodexExec } from "./codex.js";
 import { CONFIG_NAME, initConfig, loadConfig } from "./config.js";
+import { CODERABBIT_CONFIG_NAMES } from "./coderabbit-config.js";
 import { formatJsonl, formatPlain } from "./format.js";
 import { assertGitRepo, collectDiff, worktreeStatus } from "./git.js";
 import { agentJsonlToJunit } from "./junit.js";
@@ -32,6 +33,7 @@ async function main(): Promise<number> {
     if (command === "summarize") return await summarize(args);
     if (command === "auth" && args[0] === "status") return await authStatus();
     if (command === "config" && args[0] === "init") return await configInit(args.slice(1));
+    if (command === "config" && args[0] === "validate") return await configValidate(args.slice(1));
     if (command === "help" || command === "--help" || command === "-h") {
       printHelp();
       return 0;
@@ -164,6 +166,29 @@ async function configInit(args: string[]): Promise<number> {
   const path = await initConfig(dir, preset);
   console.log(`Created ${path}`);
   return 0;
+}
+
+async function configValidate(args: string[]): Promise<number> {
+  const dir = resolve(valueAfter(args, "--dir") || process.cwd());
+  const json = args.includes("--json");
+  const config = await loadConfig(dir);
+  const source = await configSource(dir);
+  const result = { ok: true, source, config };
+  if (json) console.log(JSON.stringify(result, null, 2));
+  else console.log(`Config OK (${source ?? "defaults"}).`);
+  return 0;
+}
+
+async function configSource(dir: string): Promise<string | undefined> {
+  for (const name of [CONFIG_NAME, ...CODERABBIT_CONFIG_NAMES]) {
+    try {
+      await access(resolve(dir, name));
+      return name;
+    } catch {
+      // Missing config files are fine.
+    }
+  }
+  return undefined;
 }
 
 function parseReviewArgs(args: string[]): ReviewOptions {
@@ -302,6 +327,7 @@ Usage:
   crx summarize [--format text|sarif|junit] <crx-review.jsonl|->
   crx auth status
   crx config init [--preset default|node|python|ruby]
+  crx config validate [--json] [--dir path]
 
 Options:
   --dir <path>              Git repository directory
@@ -311,6 +337,7 @@ Options:
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
   --preset <name>           Config init preset: default, node, python, ruby
+  --json                    Print machine-readable config validate output
 
 Summaries:
   crx summarize file.jsonl                 Print finding/tool failure counts and blocking details
@@ -320,7 +347,7 @@ Summaries:
 Exit codes:
   0 no blocking findings; 1 command/review failure; 3 blocking findings; 4 auto-fix applied, rerun required
 
-Config: ${CONFIG_NAME}`);
+Config: ${CONFIG_NAME}; fallback: .coderabbit.yaml, .coderabbit.yml`);
 }
 
 main().then((code) => {

@@ -5,6 +5,7 @@ import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 
 const DEFAULT_TOOL_TIMEOUT_MS = 5 * 60 * 1000;
 const DEFAULT_OUTPUT_LIMIT = 12000;
+const TIMEOUT_KILL_GRACE_MS = 100;
 
 export async function runLocalTools(tools: LocalToolConfig[] | undefined, cwd: string): Promise<ToolResultEvent[]> {
   const configured = tools ?? [];
@@ -51,7 +52,8 @@ export function renderToolResultsForPrompt(results: ToolResultEvent[]): string {
       const status = result.passed ? "passed" : result.timedOut ? "timed out" : `failed with exit ${result.exitCode}`;
       const stdout = result.stdout?.trim() ? `\nstdout:\n${result.stdout.trim()}` : "";
       const stderr = result.stderr?.trim() ? `\nstderr:\n${result.stderr.trim()}` : "";
-      return `## ${result.name}\nCommand: ${result.command.join(" ")}\nStatus: ${status}${stdout}${stderr}`;
+      const severity = !result.passed && result.severity ? `\nSeverity: ${result.severity}` : "";
+      return `## ${result.name}\nCommand: ${result.command.join(" ")}\nStatus: ${status}${severity}${stdout}${stderr}`;
     })
     .join("\n\n");
 }
@@ -76,15 +78,20 @@ function runCommand(cmd: string, args: string[], cwd: string, timeoutMs: number,
     let stderr = "";
     let timedOut = false;
     let settled = false;
+    let killTimer: NodeJS.Timeout | undefined;
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill("SIGTERM");
+      killTimer = setTimeout(() => {
+        if (!settled) child.kill("SIGKILL");
+      }, TIMEOUT_KILL_GRACE_MS);
     }, timeoutMs);
     const append = (current: string, chunk: string) => `${current}${chunk}`.slice(-outputLimit);
     const settle = (value: { exitCode: number; stdout: string; stderr: string; timedOut: boolean }) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (killTimer) clearTimeout(killTimer);
       resolve(value);
     };
     child.stdout.setEncoding("utf8");

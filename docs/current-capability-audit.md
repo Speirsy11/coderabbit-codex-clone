@@ -647,3 +647,15 @@ Implemented:
 Validation: `npm run build` and `npm test` pass.
 
 Remaining high-impact gaps: schema/docs consistency checks, generated validator exploration, and richer CI artifact publishing examples.
+
+## 2026-05-18 update — Config validate preflight v1.0
+
+Implemented:
+
+- Added `crx config validate --json` for CI/agent preflight of the effective sanitized config.
+- Reports whether config came from `crx.config.json`, `.coderabbit.yaml`, `.coderabbit.yml`, or defaults.
+- Invalid config exits through the controlled CLI error path; tests cover success and invalid JSON failure.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: final smoke review/docs consistency and generated-schema validator exploration.

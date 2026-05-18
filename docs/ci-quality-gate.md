@@ -77,6 +77,16 @@ jobs:
             crx-review.junit.xml
 ```
 
+## Config preflight
+
+Add a quick config check before expensive reviews when bootstrapping CI:
+
+```bash
+crx config validate --json --dir .
+```
+
+The command exits non-zero for invalid native config JSON and prints the effective sanitized config plus source (`crx.config.json`, `.coderabbit.yaml`, `.coderabbit.yml`, or defaults).
+
 ## Schema
 
 A machine-readable event schema is available at [`schema/agent-event.schema.json`](./schema/agent-event.schema.json). Consumers should still ignore unknown fields so the contract can evolve without breaking older agents.
