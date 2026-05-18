@@ -659,3 +659,14 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: final smoke review/docs consistency and generated-schema validator exploration.
+
+## 2026-05-18 update — Quality gate config preflight v1.1
+
+Implemented:
+
+- Wired `crx config validate --json` into `scripts/crx-quality-gate.sh`.
+- The helper writes `crx-config.json` before review, supports `CRX_CONFIG_OUT`, and can skip preflight with `CRX_SKIP_CONFIG_VALIDATE=1`.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: final smoke review and docs consistency checks.

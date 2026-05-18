@@ -269,3 +269,23 @@ Validation:
 Next likely gap:
 
 - Final smoke review / docs consistency pass, or handoff at the requested checkpoint if wall-clock time has arrived.
+
+## 2026-05-18 14:56 BST — Quality gate config preflight v1.1
+
+Evaluation source: after adding `crx config validate`, wire it into the reusable CI helper so agents catch config problems before expensive reviews.
+
+Implemented:
+
+- `scripts/crx-quality-gate.sh` now runs `crx config validate --json` before `crx review --agent`.
+- Writes the preflight artifact to `crx-config.json` by default.
+- Added `CRX_CONFIG_OUT` and `CRX_SKIP_CONFIG_VALIDATE=1` controls for CI customization.
+- Updated CI docs.
+
+Validation:
+
+- `npm test` passed: 70/70.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Final smoke review or docs consistency pass.
