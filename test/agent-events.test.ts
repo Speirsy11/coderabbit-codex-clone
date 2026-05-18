@@ -27,3 +27,18 @@ test("agent event validator accepts a complete tool_result event", () => {
   });
   assert.deepEqual(errors, []);
 });
+
+test("agent event validator accepts review_context changedFileStats", () => {
+  const errors = validateAgentEvent({
+    type: "review_context",
+    protocolVersion: "0.2",
+    schemaVersion: "crx.agent.v0.2",
+    repoDir: "/repo",
+    reviewType: "uncommitted",
+    diffBytes: 42,
+    truncated: false,
+    configFiles: [],
+    changedFileStats: [{ fileName: "src/app.ts", status: "modified", additions: 2, deletions: 1 }]
+  });
+  assert.deepEqual(errors, []);
+});
