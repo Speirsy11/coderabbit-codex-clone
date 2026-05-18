@@ -11,7 +11,7 @@
   - `schemaVersion`: currently `crx.agent.v0.2`
   - `type`: event discriminator
 
-Consumers should ignore unknown event types and unknown fields for forward compatibility.
+Consumers should ignore unknown event types and unknown fields for forward compatibility. A machine-readable schema lives at `docs/schema/agent-event.schema.json`.
 
 ## Event types
 

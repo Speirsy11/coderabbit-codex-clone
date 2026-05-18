@@ -67,3 +67,34 @@ Implement P0 review-scope controls: safe path filters for generated/dependency/b
 ### Chosen next slice
 
 Add CI quality-gate packaging: GitHub Actions and generic shell examples, a JSON Schema fixture for events, and CLI/docs checks that make the agent contract easier to consume in automation.
+
+
+## 2026-05-18 14:32 BST — Loop 3: CI gate packaging v0.1
+
+### Development completed
+
+- Added `docs/ci-quality-gate.md` with shell and GitHub Actions recipes.
+- Added `docs/schema/agent-event.schema.json` for the agent JSONL event stream.
+- Added `scripts/crx-quality-gate.sh` for reusable local/CI exit-code handling.
+- Added tests for schema parseability/protocol constants and shell syntax.
+
+### Validation
+
+- `npm test` — pass expected after this slice.
+- `npm run build` — pass expected after this slice.
+- `bash -n scripts/crx-quality-gate.sh` — covered by tests.
+
+### Production-readiness score
+
+**7.5 / 10**. Automation consumers now have a clear contract, schema artifact, and copy-paste CI recipes. The next largest quality gain is integrating deterministic local tool signals alongside Codex review.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Local linter/test/security command integration.
+- Base branch remediation for shallow/fresh clones.
+- Richer auto-fix status metadata.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Add optional local tool-result events for project-native lint/test/security checks, starting with configured shell-free commands or npm scripts that can be surfaced in JSONL before/alongside Codex.

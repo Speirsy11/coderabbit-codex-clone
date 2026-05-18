@@ -140,8 +140,13 @@ test("agent auto-fix exits 4 and marks rerun required after applying a patch", a
   const result = runCli(["review", "--agent", "--fix", "--dir", dir, "--type", "uncommitted"], mock);
   assert.equal(result.status, 4, result.stdout + result.stderr);
   const events = parseJsonl(result.stdout);
+  const statuses = events.filter((e) => e.type === "worktree_status");
+  assert.deepEqual(statuses.map((s) => s.phase), ["before_autofix", "after_autofix"]);
+  assert.equal(statuses[0].dirty, true);
+  assert.equal(statuses[1].entries.some((entry) => entry.includes("app.ts")), true);
   const autofix = events.find((e) => e.type === "autofix");
   assert.equal(autofix.applied, true);
+  assert.deepEqual(autofix.changedFiles, ["app.ts"]);
   assert.equal(autofix.needsRerun, true);
   assert.equal(events.at(-1).needsRerun, true);
   assert.equal(await readFile(join(dir, "app.ts"), "utf8"), "export const value = 3;\n");

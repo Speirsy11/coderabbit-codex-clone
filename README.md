@@ -40,6 +40,11 @@ crx config init
 
 `--fix` enables auto-fix mode without prompting. After the review, `crx` asks Codex for a minimal unified diff patch for the findings, verifies it with `git apply --check`, and applies it with `git apply` only if the patch is valid. A successful apply exits `4` and reports `needsRerun: true`; rerun the review before treating the gate as passed. Review the resulting local diff before committing.
 
+
+## CI Quality Gate
+
+For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example, a generic shell recipe, and `docs/schema/agent-event.schema.json` for the JSONL event schema. A reusable shell wrapper is available at `scripts/crx-quality-gate.sh`.
+
 ## Agent Loop
 
 Recommended loop:

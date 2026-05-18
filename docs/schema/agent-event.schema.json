@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/crx/agent-event.schema.json",
+  "title": "crx agent JSONL event",
+  "type": "object",
+  "required": ["type", "protocolVersion", "schemaVersion"],
+  "properties": {
+    "type": { "enum": ["status", "review_context", "warning", "finding", "autofix", "complete", "error"] },
+    "protocolVersion": { "const": "0.2" },
+    "schemaVersion": { "const": "crx.agent.v0.2" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "status" } } },
+      "then": { "required": ["message"], "properties": { "message": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "review_context" } } },
+      "then": {
+        "required": ["repoDir", "reviewType", "diffBytes", "truncated", "configFiles"],
+        "properties": {
+          "repoDir": { "type": "string" },
+          "reviewType": { "enum": ["all", "committed", "uncommitted"] },
+          "base": { "type": "string" },
+          "baseCommit": { "type": "string" },
+          "diffBytes": { "type": "integer", "minimum": 0 },
+          "truncated": { "type": "boolean" },
+          "configFiles": { "type": "array", "items": { "type": "string" } },
+          "instructionFiles": { "type": "array", "items": { "type": "string" } },
+          "untrackedFiles": { "type": "array", "items": { "type": "string" } },
+          "skippedUntrackedFiles": { "type": "array", "items": { "type": "string" } },
+          "excludedFiles": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "warning" } } },
+      "then": {
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "files": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "finding" } } },
+      "then": {
+        "required": ["severity", "fileName", "title", "message", "impact", "codegenInstructions", "suggestions"],
+        "properties": {
+          "severity": { "enum": ["critical", "major", "minor", "trivial", "info"] },
+          "fileName": { "type": "string" },
+          "lineStart": { "type": "integer", "minimum": 1 },
+          "lineEnd": { "type": "integer", "minimum": 1 },
+          "title": { "type": "string" },
+          "message": { "type": "string" },
+          "impact": { "type": "string" },
+          "codegenInstructions": { "type": "string" },
+          "suggestions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "autofix" } } },
+      "then": {
+        "required": ["applied", "summary"],
+        "properties": {
+          "applied": { "type": "boolean" },
+          "summary": { "type": "string" },
+          "needsRerun": { "type": "boolean" },
+          "rerunCommand": { "type": "string" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "complete" } } },
+      "then": {
+        "required": ["findingsCount", "summary"],
+        "properties": {
+          "findingsCount": { "type": "integer", "minimum": 0 },
+          "summary": { "type": "string" },
+          "autoFixApplied": { "type": "boolean" },
+          "needsRerun": { "type": "boolean" },
+          "rerunCommand": { "type": "string" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "error" } } },
+      "then": {
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "details": { "type": "string" }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}

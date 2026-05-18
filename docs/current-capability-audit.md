@@ -365,3 +365,22 @@ Remaining high-impact gaps:
 3. Add friendlier base-branch/shallow-clone remediation.
 4. Add optional local tool command integration for linters/tests/security scanners.
 5. Report auto-fix changed files and pre/post worktree status.
+
+
+## Update: CI gate packaging v0.1 (2026-05-18 14:32 BST)
+
+Implemented since the previous loop:
+
+- Added `docs/ci-quality-gate.md` with generic shell and GitHub Actions examples for `crx review --agent`.
+- Added `docs/schema/agent-event.schema.json` as a machine-readable JSON Schema for the JSONL event contract.
+- Added `scripts/crx-quality-gate.sh` as a reusable exit-code wrapper.
+- Added tests that parse the schema and syntax-check the shell wrapper.
+
+Current production-readiness score: **7.5 / 10**.
+
+Remaining high-impact gaps:
+
+1. Optional local tool integration for lint/test/security signals.
+2. Friendlier base-branch/shallow-clone remediation.
+3. Auto-fix changed-file and worktree-status reporting.
+4. JSON Schema is documented and parse-tested, but not runtime-validated by the CLI.

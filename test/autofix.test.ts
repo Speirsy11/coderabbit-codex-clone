@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { applyPatch, buildAutoFixPrompt, extractUnifiedDiff } from "../src/autofix.js";
+import { applyPatch, buildAutoFixPrompt, extractUnifiedDiff, filesFromPatch } from "../src/autofix.js";
 import type { Finding } from "../src/types.js";
 import { spawnSync } from "node:child_process";
 
@@ -32,6 +32,10 @@ test("extractUnifiedDiff accepts fenced or prefixed patch output", () => {
   assert.equal(extractUnifiedDiff("no patch"), "");
 });
 
+test("filesFromPatch returns touched files", () => {
+  assert.deepEqual(filesFromPatch("diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\ndiff --git a/src/b.ts b/src/b.ts\n--- a/src/b.ts\n+++ b/src/b.ts\n"), ["a.txt", "src/b.ts"]);
+});
+
 test("applyPatch checks and applies a generated git patch", async () => {
   const dir = await mkdtemp(join(tmpdir(), "crx-autofix-"));
   try {
@@ -47,6 +51,7 @@ test("applyPatch checks and applies a generated git patch", async () => {
     const patch = "diff --git a/example.txt b/example.txt\nindex 3367afd..3e75765 100644\n--- a/example.txt\n+++ b/example.txt\n@@ -1 +1 @@\n-old\n+new\n";
     const result = await applyPatch(dir, patch);
     assert.equal(result.applied, true);
+    assert.deepEqual(result.changedFiles, ["example.txt"]);
     const content = spawnSync("git", ["diff", "--", "example.txt"], { cwd: dir, encoding: "utf8" }).stdout;
     assert.match(content, /\+new/);
   } finally {
