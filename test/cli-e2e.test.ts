@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -249,6 +249,35 @@ test("path filters, path instructions, and auto guidelines shape the review prom
 });
 
 
+test("CI artifact smoke combines config validate, review JSONL, and summaries", async () => {
+  const dir = await createRepo();
+  await writeFile(join(dir, "app.ts"), "export const value = 2;\n");
+  const tool = join(dir, "failing-tool.mjs");
+  await writeFile(tool, "process.stderr.write('fixture failure'); process.exit(6);\n");
+  await writeFile(join(dir, "crx.config.json"), JSON.stringify({
+    localTools: [{ name: "fixture-check", command: [process.execPath, tool], failureSeverity: "critical" }]
+  }));
+  const config = runCli(["config", "validate", "--json", "--dir", dir]);
+  assert.equal(config.status, 0, config.stderr);
+  const effective = JSON.parse(config.stdout);
+  assert.equal(effective.source, "crx.config.json");
+  assert.equal(effective.config.localTools[0].failureSeverity, "critical");
+
+  const mock = await writeMockCodex("zero");
+  const review = runCli(["review", "--agent", "--dir", dir, "--type", "uncommitted"], mock);
+  assert.equal(review.status, 3, review.stdout + review.stderr);
+  const events = parseJsonl(review.stdout);
+  assert.equal(events.find((e) => e.type === "review_context")?.configSource, "crx.config.json");
+  assert.equal(events.find((e) => e.type === "tool_result")?.severity, "critical");
+
+  const artifact = join(dir, "crx-review.jsonl");
+  await writeFile(artifact, review.stdout);
+  const summary = runCli(["summarize", artifact]);
+  assert.equal(summary.status, 3, summary.stderr);
+  assert.match(summary.stdout, /CRITICAL fixture-check: exit 6/);
+});
+
+
 test("local tool failures emit JSONL tool_result and fail the gate", async () => {
   const dir = await createRepo();
   await writeFile(join(dir, "app.ts"), "export const value = 2;\n");
@@ -275,4 +304,51 @@ test("local tool failures emit JSONL tool_result and fail the gate", async () =>
   assert.match(prompt, /Local tool results:/);
   assert.match(prompt, /project-check/);
   assert.match(prompt, /tool says no/);
+});
+
+
+test("quality gate wrapper validates config, review JSONL, and summary artifacts", async () => {
+  const dir = await createRepo();
+  await writeFile(join(dir, "app.ts"), "export const value = 2;\n");
+  const tool = join(dir, "failing-tool.mjs");
+  await writeFile(tool, "process.stdout.write('tool checked app'); process.stderr.write('tool failed intentionally'); process.exit(5);\n");
+  await writeFile(join(dir, "crx.config.json"), JSON.stringify({
+    reviewProfile: "chill",
+    localTools: [{ name: "project-check", command: [process.execPath, tool] }]
+  }));
+
+  const mock = await writeMockCodex("zero");
+  const binDir = await mkdtemp(join(tmpdir(), "crx-bin-"));
+  const wrapper = join(binDir, "crx");
+  await writeFile(wrapper, `#!/usr/bin/env bash\nexec ${JSON.stringify(join(projectRoot, "node_modules", ".bin", "tsx"))} ${JSON.stringify(join(projectRoot, "src", "cli.ts"))} "$@"\n`);
+  await chmod(wrapper, 0o755);
+
+  const result = spawnSync("bash", [join(projectRoot, "scripts", "crx-quality-gate.sh")], {
+    cwd: dir,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${binDir}:${process.env.PATH ?? ""}`,
+      CRX_CODEX_COMMAND: `${process.execPath} ${mock}`,
+      CRX_REVIEW_TYPE: "uncommitted",
+      NO_COLOR: "1"
+    }
+  });
+
+  assert.equal(result.status, 3, result.stdout + result.stderr);
+  assert.match(result.stderr, /blocking findings remain|See crx-review\.jsonl/);
+
+  const config = JSON.parse(await readFile(join(dir, "crx-config.json"), "utf8"));
+  assert.equal(config.ok, true);
+  assert.equal(config.source, "crx.config.json");
+
+  const events = parseJsonl(await readFile(join(dir, "crx-review.jsonl"), "utf8"));
+  const toolResult = events.find((event) => event.type === "tool_result");
+  assert.equal(toolResult.name, "project-check");
+  assert.equal(toolResult.passed, false);
+  assert.equal(events.at(-1).summary, "0 finding(s); blocking local tool failure.");
+
+  assert.match(await readFile(join(dir, "crx-review.txt"), "utf8"), /Blocking tool failures:/);
+  assert.equal(JSON.parse(await readFile(join(dir, "crx-review.sarif"), "utf8")).runs[0].tool.driver.name, "crx");
+  assert.match(await readFile(join(dir, "crx-review.junit.xml"), "utf8"), /<failure type="tool_result"/);
 });
