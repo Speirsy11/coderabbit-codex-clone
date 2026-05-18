@@ -78,6 +78,21 @@ export interface WorktreeStatusEvent {
   entries: string[];
 }
 
+export interface ToolResultEvent {
+  type: "tool_result";
+  protocolVersion?: string;
+  schemaVersion?: string;
+  name: string;
+  command: string[];
+  exitCode: number;
+  durationMs: number;
+  passed: boolean;
+  blocking: boolean;
+  timedOut?: boolean;
+  stdout?: string;
+  stderr?: string;
+}
+
 export interface ErrorEvent {
   type: "error";
   protocolVersion?: string;
@@ -86,7 +101,16 @@ export interface ErrorEvent {
   details?: string;
 }
 
-export type AgentEvent = ReviewContextEvent | StatusEvent | WarningEvent | Finding | CompleteEvent | AutoFixEvent | WorktreeStatusEvent | ErrorEvent;
+export type AgentEvent = ReviewContextEvent | StatusEvent | WarningEvent | Finding | CompleteEvent | AutoFixEvent | WorktreeStatusEvent | ToolResultEvent | ErrorEvent;
+
+export interface LocalToolConfig {
+  name: string;
+  command: string | string[];
+  enabled?: boolean;
+  blocking?: boolean;
+  timeoutMs?: number;
+  outputLimit?: number;
+}
 
 export interface CrxConfig {
   codexCommand?: string;
@@ -95,6 +119,7 @@ export interface CrxConfig {
   pathFilters?: string[];
   pathInstructions?: { pattern: string; instructions: string | string[] }[];
   codeGuidelines?: { filePatterns?: string[] };
+  localTools?: LocalToolConfig[];
 }
 
 export interface ReviewOptions {

@@ -408,3 +408,17 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: stricter config validation, optional tool/lint signal enrichment, and continued docs/schema polish.
+
+## 2026-05-18 update — Local tool quality signals v0.6
+
+Implemented:
+
+- Added optional `localTools` config for project-native lint/test/security commands.
+- Local tools run without shell interpolation, emit `tool_result` JSONL events, and can be marked non-blocking.
+- Blocking local tool failures now fail the agent gate with exit `3` even when Codex returns no findings.
+- Local tool output is included in the Codex review prompt as deterministic context.
+- Extended JSON Schema coverage for `tool_result`, `worktree_status`, and auto-fix `changedFiles`.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: runtime JSON Schema validation, richer CI examples for local tools, review profile/noise controls, and hosted/team features explicitly deferred.

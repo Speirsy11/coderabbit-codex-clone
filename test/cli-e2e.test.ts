@@ -192,3 +192,31 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   assert.match(prompt, /src\/feature\.ts/);
   assert.doesNotMatch(prompt, /dist\/bundle\.js/);
 });
+
+
+test("local tool failures emit JSONL tool_result and fail the gate", async () => {
+  const dir = await createRepo();
+  await writeFile(join(dir, "app.ts"), "export const value = 2;\n");
+  const tool = join(dir, "failing-tool.mjs");
+  await writeFile(tool, "process.stdout.write('checked app'); process.stderr.write('tool says no'); process.exit(5);\n");
+  await writeFile(join(dir, "crx.config.json"), JSON.stringify({
+    localTools: [{ name: "project-check", command: [process.execPath, tool] }]
+  }));
+  const capture = join(dir, "prompt.txt");
+  const mock = await writeCapturingCodex(capture);
+
+  const result = runCli(["review", "--agent", "--dir", dir, "--type", "uncommitted"], mock);
+  assert.equal(result.status, 3, result.stdout + result.stderr);
+  const events = parseJsonl(result.stdout);
+  const toolResult = events.find((e) => e.type === "tool_result");
+  assert.equal(toolResult.name, "project-check");
+  assert.equal(toolResult.exitCode, 5);
+  assert.equal(toolResult.passed, false);
+  assert.equal(toolResult.blocking, true);
+  assert.equal(events.at(-1).type, "complete");
+
+  const prompt = await readFile(capture, "utf8");
+  assert.match(prompt, /Local tool results:/);
+  assert.match(prompt, /project-check/);
+  assert.match(prompt, /tool says no/);
+});

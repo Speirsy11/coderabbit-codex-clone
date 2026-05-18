@@ -12,6 +12,8 @@ test("agent event schema is valid JSON and tracks protocol version", async () =>
   assert.equal(schema.properties.protocolVersion.const, "0.2");
   assert.equal(schema.properties.schemaVersion.const, "crx.agent.v0.2");
   assert.ok(schema.properties.type.enum.includes("finding"));
+  assert.ok(schema.properties.type.enum.includes("tool_result"));
+  assert.ok(schema.properties.type.enum.includes("worktree_status"));
 });
 
 test("quality gate shell wrapper parses", () => {

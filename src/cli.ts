@@ -11,6 +11,7 @@ import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
 import { effectiveGuidelineFiles, effectivePathFilters, filesFromDiff, renderPathInstructions } from "./scope.js";
+import { hasBlockingToolFailures, renderToolResultsForPrompt, runLocalTools } from "./tools.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
 import type { AgentEvent, ReviewContextEvent, ReviewOptions, ReviewType } from "./types.js";
 
@@ -76,13 +77,20 @@ async function review(args: string[]): Promise<number> {
     if (collected.excludedFiles.length) {
       events.push(warningEvent("Some files were excluded by path filters.", collected.excludedFiles));
     }
-    events.push(statusEvent("Running Codex review."));
-    if (options.mode !== "agent") tui.status("Running Codex review");
     const instructionFiles = unique([...options.configFiles, ...(await findAutoInstructionFiles(repoDir, effectiveGuidelineFiles(config)))]);
     context.instructionFiles = instructionFiles;
     const configText = await readInstructionFiles(instructionFiles, repoDir);
     const pathInstructionText = renderPathInstructions(config, filesFromDiff(redactedDiff));
-    const prompt = buildReviewPrompt({ options, diff: redactedDiff, truncated: collected.truncated, configText, pathInstructionText, config });
+    if (config.localTools?.some((tool) => tool.enabled !== false)) {
+      events.push(statusEvent("Running configured local tools."));
+      if (options.mode !== "agent") tui.status("Running configured local tools");
+    }
+    const toolResults = await runLocalTools(config.localTools, repoDir);
+    events.push(...toolResults);
+    const toolResultText = renderToolResultsForPrompt(toolResults);
+    events.push(statusEvent("Running Codex review."));
+    if (options.mode !== "agent") tui.status("Running Codex review");
+    const prompt = buildReviewPrompt({ options, diff: redactedDiff, truncated: collected.truncated, configText, pathInstructionText, toolResultText, config });
     const codexOutput = await runCodexExec(prompt, config, repoDir);
     const findings = parseCodexFindings(codexOutput);
     events.push(...findings);
@@ -106,9 +114,11 @@ async function review(args: string[]): Promise<number> {
       if (options.mode !== "agent") process.stdout.write(`${renderAutoFixResult(result)}\n`);
     }
 
-    events.push({ type: "complete", findingsCount: findings.length, summary: `${findings.length} finding(s).`, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
+    const blockingToolFailures = hasBlockingToolFailures(toolResults);
+    const summary = blockingToolFailures ? `${findings.length} finding(s); blocking local tool failure.` : `${findings.length} finding(s).`;
+    events.push({ type: "complete", findingsCount: findings.length, summary, autoFixApplied, needsRerun: autoFixApplied, rerunCommand: autoFixApplied ? buildRerunCommand(options) : undefined });
     if (options.mode === "agent") process.stdout.write(formatJsonl(events));
-    return autoFixApplied ? 4 : hasBlockingFindings(findings) ? 3 : 0;
+    return autoFixApplied ? 4 : hasBlockingFindings(findings) || blockingToolFailures ? 3 : 0;
   } catch (err) {
     const errorEvent = { type: "error" as const, protocolVersion: AGENT_PROTOCOL_VERSION, schemaVersion: AGENT_SCHEMA_VERSION, message: err instanceof Error ? err.message : String(err) };
     tui.stop();

@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["type", "protocolVersion", "schemaVersion"],
   "properties": {
-    "type": { "enum": ["status", "review_context", "warning", "finding", "autofix", "complete", "error"] },
+    "type": { "enum": ["status", "review_context", "warning", "finding", "tool_result", "worktree_status", "autofix", "complete", "error"] },
     "protocolVersion": { "const": "0.2" },
     "schemaVersion": { "const": "crx.agent.v0.2" }
   },
@@ -67,8 +67,37 @@
         "properties": {
           "applied": { "type": "boolean" },
           "summary": { "type": "string" },
+          "changedFiles": { "type": "array", "items": { "type": "string" } },
           "needsRerun": { "type": "boolean" },
           "rerunCommand": { "type": "string" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "worktree_status" } } },
+      "then": {
+        "required": ["phase", "dirty", "entries"],
+        "properties": {
+          "phase": { "enum": ["before_autofix", "after_autofix"] },
+          "dirty": { "type": "boolean" },
+          "entries": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "tool_result" } } },
+      "then": {
+        "required": ["name", "command", "exitCode", "durationMs", "passed", "blocking"],
+        "properties": {
+          "name": { "type": "string" },
+          "command": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "exitCode": { "type": "integer" },
+          "durationMs": { "type": "integer", "minimum": 0 },
+          "passed": { "type": "boolean" },
+          "blocking": { "type": "boolean" },
+          "timedOut": { "type": "boolean" },
+          "stdout": { "type": "string" },
+          "stderr": { "type": "string" }
         }
       }
     },
