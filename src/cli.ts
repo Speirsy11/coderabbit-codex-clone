@@ -11,6 +11,7 @@ import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
 import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
 import { effectiveGuidelineFiles, effectivePathFilters, filesFromDiff, renderPathInstructions } from "./scope.js";
+import { summarizeAgentJsonl } from "./summary.js";
 import { hasBlockingToolFailures, renderToolResultsForPrompt, runLocalTools } from "./tools.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
 import type { AgentEvent, ReviewContextEvent, ReviewOptions, ReviewProfile, ReviewType } from "./types.js";
@@ -26,6 +27,7 @@ async function main(): Promise<number> {
       return 0;
     }
     if (command === "review") return await review(args);
+    if (command === "summarize") return await summarize(args);
     if (command === "auth" && args[0] === "status") return await authStatus();
     if (command === "config" && args[0] === "init") return await configInit(args.slice(1));
     if (command === "help" || command === "--help" || command === "-h") {
@@ -127,6 +129,23 @@ async function review(args: string[]): Promise<number> {
     else console.error(`Review failed: ${errorEvent.message}`);
     return 1;
   }
+}
+
+async function summarize(args: string[]): Promise<number> {
+  if (args.includes("--help") || args.includes("-h")) {
+    printHelp();
+    return 0;
+  }
+  const file = args[0];
+  const input = file && file !== "-" ? await readFile(resolve(file), "utf8") : await readStdin();
+  process.stdout.write(summarizeAgentJsonl(input));
+  return 0;
+}
+
+async function readStdin(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 async function authStatus(): Promise<number> {
@@ -268,6 +287,7 @@ function printHelp(): void {
 
 Usage:
   crx [review] [--agent] [--interactive|--tui] [--fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
+  crx summarize <crx-review.jsonl|->
   crx auth status
   crx config init
 
@@ -278,6 +298,9 @@ Options:
   --profile <mode>          Review noise profile: chill or assertive
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
+
+Summaries:
+  crx summarize file.jsonl  Print finding/tool failure counts and blocking details
 
 Exit codes:
   0 no blocking findings; 1 command/review failure; 3 blocking findings; 4 auto-fix applied, rerun required

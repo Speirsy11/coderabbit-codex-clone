@@ -245,3 +245,31 @@ After validation, add a small second-pass agent-loop helper or docs-driven workf
 ### Chosen next slice
 
 Add a small JSONL summary command or fixture helper so CI logs can quickly show final findings/tool failures without bespoke parsing.
+
+
+## 2026-05-18 15:10 BST — Loop 7: JSONL artifact summary helper v0.1
+
+### Development completed
+
+- Added `scripts/crx-jsonl-summary.mjs` to summarize JSONL artifacts for CI logs.
+- Added exit-code semantics matching blocking findings/tool failures/rerun/error states.
+- Added fixture-based test coverage.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.4 / 10**. CI consumers now have both machine-readable artifacts and a small human-readable summary without writing bespoke parsers.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Ecosystem-specific local tool presets and config generation.
+- Optional compatible config import from `.coderabbit.yaml` concepts.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Add config preset generation/docs for common local tools if the worktree remains clean and time remains.

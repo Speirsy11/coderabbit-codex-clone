@@ -492,3 +492,21 @@ Remaining high-impact gaps:
 2. Better parsing/summary helpers for JSONL artifacts.
 3. Runtime validator is hand-written rather than generated from the schema.
 4. No hosted PR/comment workflow, intentionally deferred.
+
+
+## Update: JSONL artifact summary helper v0.1 (2026-05-18 15:10 BST)
+
+Implemented since the previous loop:
+
+- Added `scripts/crx-jsonl-summary.mjs` for compact CI summaries of agent JSONL artifacts.
+- The helper summarizes finding counts, severities, blocking findings, blocking tool failures, complete summaries, and errors.
+- It preserves gate semantics with exit `0`, `1`, `3`, and `4` based on artifact contents.
+- Added test coverage using an in-memory JSONL fixture.
+
+Current production-readiness score: **8.4 / 10**.
+
+Remaining high-impact gaps:
+
+1. Preset generation for common local tool configs.
+2. Better packaged examples for npm/Python/Ruby repositories.
+3. Optional support for compatible `.coderabbit.yaml` subset import.

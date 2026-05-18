@@ -101,3 +101,14 @@ CRX_FIX=1 CRX_MAX_PASSES=2 CRX_REVIEW_TYPE=committed scripts/crx-agent-loop.sh
 ```
 
 The helper never treats “fix applied” as success. It only exits `0` after a rerun exits `0`; blocking findings or blocking tool failures still exit `3`.
+
+
+## JSONL artifact summaries
+
+Use `scripts/crx-jsonl-summary.mjs` to turn a JSONL artifact into a compact CI log summary while preserving the same blocking semantics:
+
+```bash
+scripts/crx-jsonl-summary.mjs crx-review.jsonl
+```
+
+It exits `3` when the artifact contains critical/major findings or blocking tool failures, `4` when the final `complete` event requires a rerun, `1` for error events or invalid JSONL, and `0` otherwise.

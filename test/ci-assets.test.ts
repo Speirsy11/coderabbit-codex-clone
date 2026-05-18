@@ -26,3 +26,16 @@ test("agent loop shell wrapper parses", () => {
   const result = spawnSync("bash", ["-n", "scripts/crx-agent-loop.sh"], { cwd: projectRoot, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr);
 });
+
+
+test("jsonl summary helper reports blocking artifacts", () => {
+  const input = [
+    JSON.stringify({ type: "tool_result", name: "lint", exitCode: 2, passed: false, blocking: true }),
+    JSON.stringify({ type: "finding", severity: "major", fileName: "src/app.ts", title: "Bug" }),
+    JSON.stringify({ type: "complete", findingsCount: 1, summary: "1 finding." })
+  ].join("\n") + "\n";
+  const result = spawnSync(process.execPath, ["scripts/crx-jsonl-summary.mjs", "-"], { cwd: projectRoot, input, encoding: "utf8" });
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stdout, /Blocking findings:/);
+  assert.match(result.stdout, /Blocking tool failures:/);
+});
