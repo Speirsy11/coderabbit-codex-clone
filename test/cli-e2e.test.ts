@@ -248,6 +248,9 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   await mkdir(join(dir, "dist"));
   await mkdir(join(dir, "src"));
   await writeFile(join(dir, "AGENTS.md"), "Project rule: prefer safe CLI exits.\n");
+  await writeFile(join(dir, "src", "AGENTS.md"), "Source rule: check runtime boundaries.\n");
+  git(dir, ["add", "AGENTS.md", "src/AGENTS.md"]);
+  git(dir, ["commit", "-m", "add guideline files"]);
   await writeFile(join(dir, "crx.config.json"), JSON.stringify({
     reviewProfile: "assertive",
     pathFilters: ["dist/**"],
@@ -263,17 +266,19 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   const events = parseJsonl(result.stdout);
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.excludedFiles, ["dist/bundle.js"]);
-  assert.deepEqual(context.changedFiles, ["AGENTS.md", "crx.config.json", "src/feature.ts"]);
-  assert.equal(context.changedFilesCount, 4);
-  assert.equal(context.reviewedFilesCount, 3);
+  assert.deepEqual(context.changedFiles, ["crx.config.json", "src/feature.ts"]);
+  assert.equal(context.changedFilesCount, 3);
+  assert.equal(context.reviewedFilesCount, 2);
   assert.equal(context.excludedFilesCount, 1);
   assert.equal(context.configSource, "crx.config.json");
   assert.ok(context.instructionFiles.includes("AGENTS.md"));
+  assert.ok(context.instructionFiles.includes("src/AGENTS.md"));
   assert.equal(events.some((e) => e.type === "warning" && e.files?.includes("dist/bundle.js")), true);
 
   const prompt = await readFile(capture, "utf8");
   assert.match(prompt, /Review profile: assertive/);
   assert.match(prompt, /Project rule: prefer safe CLI exits/);
+  assert.match(prompt, /Source rule: check runtime boundaries/);
   assert.match(prompt, /Check TypeScript runtime behavior/);
   assert.match(prompt, /src\/feature\.ts/);
   assert.doesNotMatch(prompt, /dist\/bundle\.js/);

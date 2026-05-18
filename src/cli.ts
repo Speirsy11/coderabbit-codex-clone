@@ -90,10 +90,11 @@ async function review(args: string[]): Promise<number> {
     if (collected.excludedFiles.length) {
       events.push(warningEvent("Some files were excluded by path filters.", collected.excludedFiles));
     }
-    const instructionFiles = unique([...options.configFiles, ...(await findAutoInstructionFiles(repoDir, effectiveGuidelineFiles(config)))]);
+    const reviewedFiles = filesFromDiff(redactedDiff);
+    const instructionFiles = unique([...options.configFiles, ...(await findAutoInstructionFiles(repoDir, effectiveGuidelineFiles(config), reviewedFiles))]);
     context.instructionFiles = instructionFiles;
     const configText = await readInstructionFiles(instructionFiles, repoDir);
-    const pathInstructionText = renderPathInstructions(config, filesFromDiff(redactedDiff));
+    const pathInstructionText = renderPathInstructions(config, reviewedFiles);
     if (config.localTools?.some((tool) => tool.enabled !== false)) {
       events.push(statusEvent("Running configured local tools."));
       if (options.mode !== "agent") tui.status("Running configured local tools");
@@ -266,9 +267,9 @@ async function readInstructionFiles(files: string[], repoDir: string): Promise<s
   return chunks.join("\n\n").slice(0, 50000);
 }
 
-async function findAutoInstructionFiles(repoDir: string, candidates: string[]): Promise<string[]> {
+async function findAutoInstructionFiles(repoDir: string, candidates: string[], changedFiles: string[] = []): Promise<string[]> {
   const found: string[] = [];
-  for (const candidate of candidates) {
+  for (const candidate of scopedInstructionCandidates(candidates, changedFiles)) {
     try {
       const path = resolve(repoDir, candidate);
       const info = await lstat(path);
@@ -278,6 +279,38 @@ async function findAutoInstructionFiles(repoDir: string, candidates: string[]): 
     }
   }
   return found;
+}
+
+function scopedInstructionCandidates(candidates: string[], changedFiles: string[]): string[] {
+  const paths: string[] = [];
+  const scopedDirs = instructionScopeDirs(changedFiles);
+  for (const candidate of candidates) {
+    if (isDirectoryScopedGuideline(candidate)) {
+      for (const dir of scopedDirs) paths.push(dir ? `${dir}/${candidate}` : candidate);
+    } else {
+      paths.push(candidate);
+    }
+  }
+  return unique(paths);
+}
+
+function instructionScopeDirs(changedFiles: string[]): string[] {
+  const dirs = new Set<string>([""]);
+  for (const file of changedFiles) {
+    const clean = file.replace(/\\/g, "/").replace(/^\/+/, "");
+    const parts = clean.split("/").filter(Boolean);
+    parts.pop();
+    let dir = "";
+    for (const part of parts) {
+      dir = dir ? `${dir}/${part}` : part;
+      dirs.add(dir);
+    }
+  }
+  return [...dirs].sort((a, b) => a.split("/").length - b.split("/").length || a.localeCompare(b));
+}
+
+function isDirectoryScopedGuideline(candidate: string): boolean {
+  return !candidate.includes("/") && !/[!*?[\]{}]/.test(candidate);
 }
 
 function unique<T>(values: T[]): T[] {

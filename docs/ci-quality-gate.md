@@ -152,12 +152,20 @@ scripts/crx-jsonl-summary.mjs crx-review.jsonl
 
 It exits `3` when the artifact contains critical/major findings or blocking tool failures, `4` when the final `complete` event requires a rerun, `1` for error events or invalid JSONL, and `0` otherwise.
 
+The matching no-build metrics helper is:
+
+```bash
+scripts/crx-jsonl-metrics.mjs crx-review.jsonl > crx-review.metrics.json
+```
+
 ## Metrics JSON
 
 Use metrics JSON when you want a tiny artifact for trend dashboards or later history aggregation:
 
 ```bash
 crx summarize --format json crx-review.jsonl > crx-review.metrics.json
+# or, without the built CLI:
+scripts/crx-jsonl-metrics.mjs crx-review.jsonl > crx-review.metrics.json
 ```
 
 The JSON includes finding counts by severity/category, blocking finding count, local tool failure/timing counts, final completion metadata, error messages, and the same gate-style exit code that `crx summarize` returns.

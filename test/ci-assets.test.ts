@@ -23,6 +23,7 @@ test("GitHub Actions docs preserve review artifacts", async () => {
   assert.match(docs, /crx-review\.sarif/);
   assert.match(docs, /crx-review\.junit\.xml/);
   assert.match(docs, /crx-review\.metrics\.json/);
+  assert.match(docs, /scripts\/crx-jsonl-metrics\.mjs/);
   assert.match(docs, /crx-config\.json/);
   assert.match(docs, /actions\/upload-artifact@v4/);
 });
@@ -79,6 +80,16 @@ test("jsonl summary helper reports blocking artifacts", () => {
   assert.match(result.stdout, /Blocking findings:/);
   assert.match(result.stdout, /Blocking tool failures:/);
 });
+
+test("jsonl metrics helper emits compact counts", () => {
+  const input = JSON.stringify({ type: "tool_result", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", name: "lint", command: ["npm", "run", "lint"], exitCode: 1, durationMs: 10, passed: false, blocking: true, phase: "post_autofix" });
+  const result = spawnSync(process.execPath, ["scripts/crx-jsonl-metrics.mjs", "-"], { cwd: projectRoot, input, encoding: "utf8" });
+  assert.equal(result.status, 3, result.stderr);
+  const metrics = JSON.parse(result.stdout);
+  assert.equal(metrics.localTools.blockingFailures, 1);
+  assert.equal(metrics.localTools.byPhase.post_autofix, 1);
+});
+
 
 test("jsonl to sarif helper converts findings for code scanning", () => {
   const input = [
