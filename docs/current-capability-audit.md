@@ -670,3 +670,14 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: final smoke review and docs consistency checks.
+
+## 2026-05-18 update — Agent contract docs/schema consistency lock v1.0
+
+Implemented:
+
+- Added regression tests that parse `docs/agent-contract.md` JSON examples and validate them with the runtime event validator.
+- Added schema enum ordering coverage so docs, schema, and event stream expectations do not drift silently.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: final smoke review and generated-schema validator exploration.

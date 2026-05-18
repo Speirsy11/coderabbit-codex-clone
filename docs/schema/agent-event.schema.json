@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["type", "protocolVersion", "schemaVersion"],
   "properties": {
-    "type": { "enum": ["status", "review_context", "warning", "finding", "tool_result", "worktree_status", "autofix", "complete", "error"] },
+    "type": { "enum": ["status", "review_context", "warning", "tool_result", "finding", "worktree_status", "autofix", "complete", "error"] },
     "protocolVersion": { "const": "0.2" },
     "schemaVersion": { "const": "crx.agent.v0.2" }
   },

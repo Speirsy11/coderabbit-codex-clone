@@ -289,3 +289,22 @@ Validation:
 Next likely gap:
 
 - Final smoke review or docs consistency pass.
+
+## 2026-05-18 14:58 BST — Agent contract docs/schema consistency lock v1.0
+
+Evaluation source: remaining schema/docs consistency gap after multiple JSONL contract extensions.
+
+Implemented:
+
+- Added tests that parse every JSON example in `docs/agent-contract.md` and validate it with the runtime agent event validator.
+- Added a schema enum order check against the documented event order.
+- Aligned schema event ordering with the contract docs and actual review stream order.
+
+Validation:
+
+- `npm test` passed: 72/72.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Final end-to-end smoke review or stop/handoff at checkpoint.
