@@ -32,7 +32,7 @@ crx review --base-commit abc123
 crx review --profile assertive
 crx review --dir /path/to/repo -c AGENTS.md README.md
 crx auth status
-crx config init
+crx config init --preset node
 ```
 
 `--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `tool_result`, `finding`, `worktree_status`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes. `--profile chill|assertive` tunes review noise; `chill` is the default and asks for production-relevant issues only. `crx.config.json` supports path filters, glob-scoped path instructions, auto-detected guideline file patterns, review profiles, and opt-in local tool commands for agent reviews.
@@ -115,7 +115,7 @@ crx --fix -t uncommitted
 
 `crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. Review prompts are sent to Codex over stdin rather than process argv. Extra instruction files must stay inside the repo and symlinks are rejected. Auto-fix mode applies only patches that pass `git apply --check`, but you should still inspect the resulting diff before committing.
 
-Configure optional local project checks with `localTools` in `crx.config.json`; each command runs without shell interpolation, emits a `tool_result` event, is included in the Codex prompt, and blocks the gate by default unless `blocking: false` is set.
+`crx config init --preset node` writes a starter config that runs `npm test` and `npm run build` as blocking local tools. Configure optional local project checks with `localTools` in `crx.config.json`; each command runs without shell interpolation, emits a `tool_result` event, is included in the Codex prompt, and blocks the gate by default unless `blocking: false` is set.
 
 For `all` and `uncommitted` reviews, small untracked text files are included in the review input. Large, binary, unreadable, and non-file untracked paths are skipped and reported in JSONL context/warning events. Default path filters exclude generated/dependency/media artifacts such as `node_modules/**`, `dist/**`, lockfiles, minified bundles, source maps, and common binary extensions; add repo-specific filters with `pathFilters` in `crx.config.json`. `pathInstructions` can attach glob-scoped guidance to matching changed files, and common guideline files such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, and `.github/copilot-instructions.md` are auto-loaded when present. If the diff exceeds `--max-diff-bytes`, it is truncated and the truncation is reported in plain and JSONL output.
 

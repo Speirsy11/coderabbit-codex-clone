@@ -91,6 +91,16 @@ Example `crx.config.json` snippet:
 
 Commands are split and spawned without a shell. Use array form for exact argv control. Tool output is truncated before being included in JSONL and the Codex prompt. Use `reviewProfile: "chill"` for production-risk gates and `"assertive"` when you want broader maintainability feedback.
 
+### Preset configs
+
+For Node projects, generate a starter config with blocking `npm test` and `npm run build` checks:
+
+```bash
+crx config init --preset node
+```
+
+Edit the generated `localTools` array if your project uses different scripts or package managers.
+
 
 ## Second-pass agent loop
 

@@ -108,3 +108,22 @@ Validation:
 Next likely gap:
 
 - Runtime JSON Schema validation or further schema/docs alignment for agent consumers.
+
+## 2026-05-18 15:30–15:40 BST — Node local-tool config preset v0.9
+
+Evaluation source: remaining gap for common local-tool presets/examples after generic `localTools` support landed.
+
+Implemented:
+
+- Added `crx config init --preset node` to generate blocking `npm test` and `npm run build` local tools.
+- Added `configPreset()` and tests verifying generated preset commands load correctly.
+- Updated README and CI docs with the preset workflow.
+
+Validation:
+
+- `npm test` passed.
+- `npm run build` passed.
+
+Next likely gap:
+
+- More preset coverage only if needed; otherwise focus on docs/schema consistency and polish.

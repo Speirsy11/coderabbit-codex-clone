@@ -510,3 +510,15 @@ Remaining high-impact gaps:
 1. Preset generation for common local tool configs.
 2. Better packaged examples for npm/Python/Ruby repositories.
 3. Optional support for compatible `.coderabbit.yaml` subset import.
+
+## 2026-05-18 update — Node local-tool config preset v0.9
+
+Implemented:
+
+- Added `crx config init --preset node` as a quick-start for Node CI gates.
+- The preset configures blocking `npm test` and `npm run build` local tools.
+- README and CI docs now show the preset path alongside hand-written `localTools` config.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: further docs/schema consistency checks, optional additional presets, and richer review categories.
