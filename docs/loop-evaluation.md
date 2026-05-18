@@ -603,3 +603,31 @@ This improves repository-settings observability for local/CI runs, similar to be
 ### Next recommended slice
 
 Add a no-Codex fixture smoke test for config validation plus artifact summarization, or continue tightening docs/schema examples while staying at clean validation points.
+
+## 2026-05-18 15:08 BST — Loop 18: Quality-gate artifact smoke v1.0
+
+### Development completed
+
+- Extended `scripts/crx-quality-gate.sh` to generate text, SARIF, and JUnit artifacts after the JSONL review while preserving gate exit semantics.
+- Added `CRX_SUMMARY_OUT`, `CRX_SARIF_OUT`, `CRX_JUNIT_OUT`, and `CRX_SKIP_ARTIFACTS` controls for CI operators.
+- Added an end-to-end no-auth wrapper smoke test that runs config validation, mocked Codex review, a blocking local tool, and artifact generation in a fixture repo.
+- Tightened agent completion metadata with a final `exitCode`, and ensured summaries/artifacts can rely on that explicit terminal signal.
+
+### Validation
+
+- `npm test` — pass, 74 tests.
+- `npm run build` — pass.
+- `bash -n scripts/crx-quality-gate.sh` — pass.
+- Targeted CLI checks: `node dist/cli.js config validate --json` and `node dist/cli.js summarize --format sarif ...` — pass.
+
+### Production-readiness score
+
+**9.3 / 10**. The reusable CI helper now produces the same observable artifact set as the documented GitHub Actions flow, and the new fixture proves the path works without a live Codex auth dependency.
+
+### CodeRabbit comparison
+
+This further narrows the CI/local gap by making config preflight, local tool signals, JSONL, readable summaries, SARIF, and JUnit available from one helper. Hosted PR comments, dashboards, organization learnings, and managed cloud execution remain intentionally out of scope.
+
+### Next recommended slice
+
+Add a small fixture around review-profile prompt/noise behavior in artifact mode, or start a focused docs pass that marks implemented feature-matrix rows as complete so future agents pick only truly remaining gaps.
