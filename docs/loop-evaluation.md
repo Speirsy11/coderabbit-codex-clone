@@ -631,3 +631,30 @@ This further narrows the CI/local gap by making config preflight, local tool sig
 ### Next recommended slice
 
 Add a small fixture around review-profile prompt/noise behavior in artifact mode, or start a focused docs pass that marks implemented feature-matrix rows as complete so future agents pick only truly remaining gaps.
+
+
+## 2026-05-18 15:05 BST — Loop 19: Feature matrix status refresh
+
+### Development completed
+
+- Commit `f78852d` (`docs: refresh CodeRabbit feature matrix status`).
+- Updated `docs/coderabbit-feature-matrix.md` so future slices do not treat already-landed CI, config, JSONL schema, local tool, artifact, and loop work as open gaps.
+- Added an implementation-status snapshot and marked the first three recommended slices as implemented.
+- Reframed remaining work around optional polish and intentionally deferred hosted CodeRabbit parity.
+
+### Validation
+
+- `npm test` — pass, 74 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.3 / 10**. The project documentation now reflects the actual local/CI capability baseline, reducing the chance of duplicate work and helping future agents pick genuinely high-impact remaining slices.
+
+### CodeRabbit comparison
+
+The local/CI quality gate wedge is now documented as complete relative to the selected CodeRabbit parity goal. Remaining gaps are explicitly hosted/team/advanced-context features rather than blockers for agent-run review after each change set.
+
+### Next recommended slice
+
+Add one small optional polish item, such as a post-fix verify command hook or Git hook recipe, then re-evaluate whether any safe code slice remains before the 16:20 checkpoint.
