@@ -493,3 +493,59 @@ This narrows the most relevant configuration parity gap for agent-run local revi
 ### Next recommended slice
 
 Harden the YAML subset mapper with edge-case tests and clearer precedence docs, then continue with small validation/doc polish until the 16:20 checkpoint.
+
+## 2026-05-18 14:53 BST — Loop 15: Local tool timeout and config validation polish v0.1
+
+### Development completed
+
+- Hardened local tool timeout handling so a timed-out command is first sent `SIGTERM` and then force-killed with `SIGKILL` if it does not exit promptly.
+- Preserved the `tool_result` JSONL contract for timeouts with exit code `124`, `timedOut: true`, and failure severity in prompt context.
+- Added regression coverage for local tools that ignore `SIGTERM`.
+- Added `crx config validate [--json] [--dir path]` to inspect the sanitized effective config, including CodeRabbit YAML fallback source detection.
+- Added E2E coverage for clean config validation output and invalid config errors without stack traces.
+
+### Validation
+
+- `npm test` — pass, 70 tests.
+- `npm run build` — pass.
+- `node dist/cli.js config validate --json` — pass.
+- `node dist/cli.js review --bad-option` — pass, exit `1`, no stack trace.
+
+### Production-readiness score
+
+**9.2 / 10**. The local/CI quality gate is more robust against hung project-native tools and easier to debug before running an expensive review because teams can validate the effective sanitized config directly.
+
+### CodeRabbit comparison
+
+This improves the reliability of local deterministic checks in agent-run workflows. `crx` still intentionally does not provide hosted PR comments, dashboards, organization learnings, or managed cloud execution.
+
+### Next recommended slice
+
+Add a final smoke fixture for a config-driven local-tools review, or tighten docs/schema consistency around effective config output if another small safe slice is needed.
+
+
+## 2026-05-18 14:56 BST — Loop 16: Config validation and tool severity polish
+
+### Development completed
+
+- Commit `7bd0434` (`Add config validate command`).
+- Added `crx config validate [--json] [--dir path]` so CI and migration scripts can inspect the sanitized effective config and source file before running a gate.
+- Surfaced local-tool failure severity in prompt context and locked default severities with tests.
+- Updated README and CI docs for config validation and failed-tool severity behavior.
+
+### Validation
+
+- `npm test` — pass, 70 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.2 / 10**. Operators now have a preflight command for native and CodeRabbit-fallback config, plus clearer severity signals across JSONL, summaries, artifacts, and prompt context.
+
+### CodeRabbit comparison
+
+This improves the local/CI equivalent of CodeRabbit's repository configuration diagnostics and quality signal weighting. Hosted PR comments, dashboard workflows, organization-level learnings, and managed cloud execution remain intentionally out of scope.
+
+### Next recommended slice
+
+Add a small CI-ready fixture/smoke example for `crx config validate` plus a generic quality-gate recipe that validates config before running `crx --agent`.
