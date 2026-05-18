@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONFIG_NAME, initConfig, loadConfig, sanitizeConfig } from "../src/config.js";
+import { CONFIG_NAME, configPreset, initConfig, loadConfig, sanitizeConfig } from "../src/config.js";
 
 test("config init creates readable config", async () => {
   const dir = await mkdtemp(join(tmpdir(), "crx-"));
@@ -52,4 +52,14 @@ test("loadConfig reports invalid JSON with config filename", async () => {
   const dir = await mkdtemp(join(tmpdir(), "crx-"));
   await writeFile(join(dir, CONFIG_NAME), "{not-json");
   await assert.rejects(loadConfig(dir), /Invalid crx\.config\.json/);
+});
+
+test("node config preset enables test and build local tools", async () => {
+  const preset = configPreset("node");
+  assert.deepEqual(preset.localTools?.map((tool) => tool.name), ["test", "build"]);
+
+  const dir = await mkdtemp(join(tmpdir(), "crx-"));
+  await initConfig(dir, "node");
+  const loaded = await loadConfig(dir);
+  assert.deepEqual(loaded.localTools?.map((tool) => tool.command), [["npm", "test"], ["npm", "run", "build"]]);
 });

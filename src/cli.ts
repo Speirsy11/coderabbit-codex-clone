@@ -157,7 +157,8 @@ async function authStatus(): Promise<number> {
 
 async function configInit(args: string[]): Promise<number> {
   const dir = valueAfter(args, "--dir") || process.cwd();
-  const path = await initConfig(dir);
+  const preset = valueAfter(args, "--preset");
+  const path = await initConfig(dir, preset);
   console.log(`Created ${path}`);
   return 0;
 }
@@ -289,7 +290,7 @@ Usage:
   crx [review] [--agent] [--interactive|--tui] [--fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
   crx summarize <crx-review.jsonl|->
   crx auth status
-  crx config init
+  crx config init [--preset default|node]
 
 Options:
   --dir <path>              Git repository directory
@@ -298,6 +299,7 @@ Options:
   --profile <mode>          Review noise profile: chill or assertive
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
+  --preset <name>           Config init preset: default, node
 
 Summaries:
   crx summarize file.jsonl  Print finding/tool failure counts and blocking details

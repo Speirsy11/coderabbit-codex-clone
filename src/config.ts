@@ -88,9 +88,24 @@ export function sanitizeConfig(input: Record<string, unknown>, defaults: CrxConf
   return config;
 }
 
-export async function initConfig(dir: string): Promise<string> {
+export function configPreset(name: string | undefined): CrxConfig {
+  const base = defaultConfig();
+  if (!name || name === "default" || name === "none") return base;
+  if (name === "node") {
+    return {
+      ...base,
+      localTools: [
+        { name: "test", command: ["npm", "test"], timeoutMs: 300000 },
+        { name: "build", command: ["npm", "run", "build"], timeoutMs: 300000 }
+      ]
+    };
+  }
+  throw new Error(`Unknown config preset: ${name}`);
+}
+
+export async function initConfig(dir: string, preset?: string): Promise<string> {
   const path = resolve(dir, CONFIG_NAME);
-  await writeFile(path, `${JSON.stringify(defaultConfig(), null, 2)}\n`, { flag: "wx" });
+  await writeFile(path, `${JSON.stringify(configPreset(preset), null, 2)}\n`, { flag: "wx" });
   return path;
 }
 

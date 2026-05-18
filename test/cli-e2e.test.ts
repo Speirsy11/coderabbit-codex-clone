@@ -92,6 +92,16 @@ test("crx --help and review --help exit cleanly", () => {
   }
 });
 
+test("summarize prints JSONL artifact overview", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "crx-summary-"));
+  const file = join(dir, "review.jsonl");
+  await writeFile(file, `${JSON.stringify({ type: "complete", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", findingsCount: 0, summary: "0 finding(s)." })}\n`);
+  const result = runCli(["summarize", file]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /CRX JSONL summary/);
+  assert.match(result.stdout, /Findings: 0/);
+});
+
 test("invalid review option exits with controlled error and no stack trace", () => {
   const result = runCli(["review", "--bad-option"]);
   assert.equal(result.status, 1);

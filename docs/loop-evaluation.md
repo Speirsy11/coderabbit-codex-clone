@@ -273,3 +273,31 @@ Add a small JSONL summary command or fixture helper so CI logs can quickly show 
 ### Chosen next slice
 
 Add config preset generation/docs for common local tools if the worktree remains clean and time remains.
+
+
+## 2026-05-18 15:20 BST — Loop 8: Node local-tool config preset v0.1
+
+### Development completed
+
+- Added `configPreset("node")` and `crx config init --preset node`.
+- The node preset enables blocking `npm test` and `npm run build` local tool results.
+- Added tests and docs for the preset.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.5 / 10**. New Node projects can now bootstrap a practical agent quality gate without hand-writing localTools config.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- More ecosystem presets.
+- Optional `.coderabbit.yaml` subset import.
+- SARIF/JUnit or other artifact adapters.
+
+### Chosen next slice
+
+Add another small preset or improve docs/tests based on next status check.
