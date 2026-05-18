@@ -56,8 +56,11 @@ jobs:
           set +e
           node dist/cli.js review --agent --type committed > crx-review.jsonl
           code=$?
+          node dist/cli.js summarize crx-review.jsonl > crx-review.txt
+          node dist/cli.js summarize --format sarif crx-review.jsonl > crx-review.sarif
+          node dist/cli.js summarize --format junit crx-review.jsonl > crx-review.junit.xml
           set -e
-          cat crx-review.jsonl
+          cat crx-review.txt
           if [ "$code" -eq 0 ]; then exit 0; fi
           if [ "$code" -eq 3 ]; then echo "Blocking crx findings" >&2; exit 3; fi
           if [ "$code" -eq 4 ]; then echo "Auto-fix applied; rerun required" >&2; exit 4; fi
@@ -67,7 +70,11 @@ jobs:
         if: always()
         with:
           name: crx-review
-          path: crx-review.jsonl
+          path: |
+            crx-review.jsonl
+            crx-review.txt
+            crx-review.sarif
+            crx-review.junit.xml
 ```
 
 ## Schema
