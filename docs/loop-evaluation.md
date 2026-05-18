@@ -658,3 +658,31 @@ The local/CI quality gate wedge is now documented as complete relative to the se
 ### Next recommended slice
 
 Add one small optional polish item, such as a post-fix verify command hook or Git hook recipe, then re-evaluate whether any safe code slice remains before the 16:20 checkpoint.
+
+
+## 2026-05-18 15:13 BST — Loop 20: Post-fix local verification
+
+### Development completed
+
+- Commit `b5e0fea` (`Add post-fix local tool verification`).
+- Added `--verify-fix` so an applied `--fix` patch can immediately rerun configured `localTools` and emit `tool_result` events with `phase: "post_autofix"`.
+- Added `phase: "pre_review" | "post_autofix"` to tool-result schema, docs, runtime validation, and tests.
+- Added reviewed/excluded changed-file counts to `review_context` for richer CI artifact metadata.
+- Documented the new verification flag in README and the agent contract.
+
+### Validation
+
+- `npm test` — pass, 75 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**9.35 / 10**. Auto-fix runs can now surface immediate deterministic verification signals without pretending the patch is final; exit `4` still forces a rerun before pass/fail, matching the safer CodeRabbit-style fix loop.
+
+### CodeRabbit comparison
+
+This closes part of the CodeRabbit autofix verification gap for local workflows. `crx` still does not deliver hosted PR commits or managed verification environments, but it can now rerun project-native checks after local patches.
+
+### Next recommended slice
+
+Add docs/examples for Git hook or pre-push usage, or perform a final critical review and keep validating at clean push points until the 16:20 checkpoint.
