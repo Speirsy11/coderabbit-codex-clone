@@ -44,7 +44,7 @@ Review scope and diff metadata.
 }
 ```
 
-For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`. Files excluded by path filters are listed in `excludedFiles`. Auto-detected and explicit instruction files are listed in `instructionFiles`.
+For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`.
 
 ### `warning`
 
@@ -52,6 +52,14 @@ Non-fatal quality-gate caveat, such as skipped untracked files or files excluded
 
 ```json
 {"type":"warning","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","message":"Some untracked files were skipped because they were too large, binary, or unreadable.","files":["large.bin"]}
+```
+
+### `tool_result`
+
+Emitted for each configured local tool command before the Codex review. Commands run with `shell: false`; failed blocking tools make the gate exit `3`.
+
+```json
+{"type":"tool_result","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","name":"lint","command":["npm","run","lint"],"exitCode":0,"durationMs":812,"passed":true,"blocking":true,"timedOut":false,"stdout":"","stderr":""}
 ```
 
 ### `finding`
@@ -112,7 +120,7 @@ Terminal failure event.
 
 - `0`: review completed and no `critical` or `major` findings remain in this run.
 - `1`: command/review failure. In agent mode, inspect the final `error` event.
-- `3`: review completed and at least one `critical` or `major` finding remains.
+- `3`: review completed and at least one `critical`/`major` finding or blocking local tool failure remains.
 - `4`: auto-fix applied a patch. The worktree changed and the agent must rerun before deciding pass/fail.
 
 ## Recommended agent loop

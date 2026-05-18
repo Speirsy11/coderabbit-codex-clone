@@ -98,3 +98,35 @@ Add CI quality-gate packaging: GitHub Actions and generic shell examples, a JSON
 ### Chosen next slice
 
 Add optional local tool-result events for project-native lint/test/security checks, starting with configured shell-free commands or npm scripts that can be surfaced in JSONL before/alongside Codex.
+
+
+## 2026-05-18 14:42 BST — Loop 4: Local tool-result integration v0.1
+
+### Development completed
+
+- Added `localTools` config support with sanitization.
+- Added shell-free local tool execution and bounded stdout/stderr capture.
+- Added `tool_result` JSONL events and schema coverage.
+- Fed local tool results into the Codex review prompt.
+- Made blocking local tool failures fail the quality gate with exit `3`.
+- Added unit and E2E tests for passing/failing/non-blocking tool behavior.
+
+### Validation
+
+- `npm test` — pass, 45 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**7.9 / 10**. `crx` is now materially more useful as an agent-run quality gate because deterministic project checks can participate in the same JSONL/exit-code contract as Codex review.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Runtime schema validation/fixtures.
+- Tool presets and better docs for common ecosystems.
+- Stronger base-branch remediation for CI/shallow clones.
+- A first-class second-pass fix/rerun wrapper.
+
+### Chosen next slice
+
+Add schema/contract self-checking and/or a second-pass agent loop helper, choosing whichever is safer after the next status check.

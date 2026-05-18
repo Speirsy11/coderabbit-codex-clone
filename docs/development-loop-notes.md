@@ -87,3 +87,24 @@ Validation:
 Next likely gap:
 
 - Review current docs again and choose remaining highest-impact quality-gate gap; likely schema/docs polish or stricter config validation.
+
+## 2026-05-18 15:00–15:10 BST — Local tool signal + config validation v0.6
+
+Evaluation source: feature matrix P1 local linter/security-tool gap and current audit notes on stricter config validation.
+
+Implemented:
+
+- Added opt-in `localTools` config entries with name, command, blocking, timeout, and output-limit controls.
+- Local tools run with `shell: false`, emit `tool_result` JSONL events, and their summarized output is included in the Codex review prompt.
+- Blocking local tool failures make the gate exit `3`; non-blocking failures remain advisory.
+- Config loading now rejects invalid JSON and sanitizes supported fields instead of blindly spreading arbitrary repo config.
+- Added unit and E2E tests for tool execution, blocking behavior, config sanitization, and invalid JSON handling.
+
+Validation:
+
+- `npm test` passed: 45/45.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Runtime JSON Schema validation or further schema/docs alignment for agent consumers.

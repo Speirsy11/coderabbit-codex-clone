@@ -7,18 +7,19 @@
 1. `src/cli.ts` parses commands and options.
 2. `src/git.ts` verifies the selected directory is a Git repo and collects a diff with safe `spawn` arguments, then applies configured path filters. `src/scope.ts` filters generated/dependency paths and computes path-specific instruction context.
 3. `src/redact.ts` removes likely secrets from the diff.
-4. `src/config.ts` loads `crx.config.json`, review preferences, path filters, path instructions, and guideline patterns.
-5. `src/prompt.ts` builds a strict JSON-only review prompt.
-6. `src/codex.ts` invokes `codex exec -` through the trusted Codex command and sends the review prompt over stdin.
-7. `src/parser.ts` extracts and validates findings from Codex output.
-8. `src/format.ts` renders human plain text or versioned JSONL agent events.
-9. Optional auto-fix records pre/post worktree status, asks Codex for a unified diff, applies it only after `git apply --check` succeeds, and reports changed files.
+4. `src/config.ts` loads and sanitizes `crx.config.json`, review preferences, path filters, path instructions, guideline patterns, and opt-in local tools.
+5. `src/tools.ts` runs configured local tools with `spawn(..., { shell: false })`, emits `tool_result` events, and adds the signal to the review prompt.
+6. `src/prompt.ts` builds a strict JSON-only review prompt.
+7. `src/codex.ts` invokes `codex exec -` through the trusted Codex command and sends the review prompt over stdin.
+8. `src/parser.ts` extracts and validates findings from Codex output.
+9. `src/format.ts` renders human plain text or versioned JSONL agent events.
+10. Optional auto-fix records pre/post worktree status, asks Codex for a unified diff, applies it only after `git apply --check` succeeds, and reports changed files.
 
 ## Security Notes
 
 - No CodeRabbit APIs are used.
 - No OpenAI API key is required by this tool.
-- Commands use `spawn(..., { shell: false })`.
+- Commands use `spawn(..., { shell: false })`, including configured local tools.
 - Repo-local `codexCommand` is not trusted by default; use `CRX_CODEX_COMMAND` or opt in with `CRX_TRUST_REPO_CODEX_COMMAND=1`.
 - Extra and auto-detected instruction files must resolve inside the repository, must be regular files, and symlinks are rejected.
 - Diffs are path-filtered and redacted before prompt construction.

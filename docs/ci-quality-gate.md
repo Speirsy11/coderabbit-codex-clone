@@ -9,7 +9,7 @@
 - `3`: fail; critical/major findings remain.
 - `4`: auto-fix applied; rerun before deciding pass/fail.
 
-CI should parse stdout as JSONL only and archive it as an artifact. Stderr is intentionally quiet in normal agent mode.
+CI should parse stdout as JSONL only and archive it as an artifact. Stderr is intentionally quiet in normal agent mode. Optional `localTools` entries in `crx.config.json` can run project-native checks before Codex review; blocking non-zero exits emit `tool_result` events and fail the gate with exit `3`.
 
 ## Generic shell
 
@@ -73,3 +73,19 @@ jobs:
 ## Schema
 
 A machine-readable event schema is available at [`schema/agent-event.schema.json`](./schema/agent-event.schema.json). Consumers should still ignore unknown fields so the contract can evolve without breaking older agents.
+
+
+## Local tool checks
+
+Example `crx.config.json` snippet:
+
+```json
+{
+  "localTools": [
+    { "name": "test", "command": ["npm", "test"], "timeoutMs": 300000 },
+    { "name": "audit", "command": "npm audit --audit-level high", "blocking": false }
+  ]
+}
+```
+
+Commands are split and spawned without a shell. Use array form for exact argv control. Tool output is truncated before being included in JSONL and the Codex prompt.

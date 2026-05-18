@@ -422,3 +422,37 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: runtime JSON Schema validation, richer CI examples for local tools, review profile/noise controls, and hosted/team features explicitly deferred.
+
+## 2026-05-18 update — Local tool signal + config validation v0.6
+
+Implemented:
+
+- Added opt-in local tool command integration via `localTools` in `crx.config.json`.
+- Each tool emits a `tool_result` JSONL event and contributes output to the Codex review prompt.
+- Blocking local tool failures now fail the quality gate with exit `3`; non-blocking tools are advisory.
+- Config loading now reports invalid JSON explicitly and sanitizes supported config fields, including local tool definitions.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: runtime JSON Schema validation, broader config docs/examples, and continued production fixture hardening.
+
+
+## Update: Local tool-result integration v0.1 (2026-05-18 14:42 BST)
+
+Implemented since the previous loop:
+
+- Added typed `localTools` config entries for project-native commands.
+- Runs enabled local tools before Codex review without shell interpolation.
+- Emits `tool_result` JSONL events with command argv, exit code, pass/blocking status, timeout flag, duration, and bounded stdout/stderr.
+- Includes local tool output in the Codex prompt so model findings can account for deterministic lint/test/security signals.
+- Blocking non-zero local tool exits fail the gate with exit `3` even when Codex returns zero findings.
+- Sanitizes config values and reports invalid JSON as controlled config errors.
+
+Current production-readiness score: **7.9 / 10**.
+
+Remaining high-impact gaps:
+
+1. Runtime validation against `docs/schema/agent-event.schema.json`.
+2. Better preconfigured presets for common npm/Python/Ruby/security tools.
+3. Better base-branch/shallow-clone remediation in docs and maybe CLI hints.
+4. Optional second-pass automation command around fix/rerun loop.
