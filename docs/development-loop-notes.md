@@ -250,7 +250,7 @@ Next likely gap:
 
 - Schema/docs consistency checks, generated validator exploration, or additional CI publishing examples.
 
-## 2026-05-18 16:20 BST — Config validate preflight v1.0
+## 2026-05-18 14:53 BST — Config validate preflight v1.0
 
 Evaluation source: schema/docs/config consistency gap after adding native and CodeRabbit-style config paths.
 
@@ -263,9 +263,9 @@ Implemented:
 
 Validation:
 
-- `npm test` passed: 69/69.
+- `npm test` passed: 70/70.
 - `npm run build` passed.
 
 Next likely gap:
 
-- Final smoke review / docs consistency pass, or handoff at the requested 16:20 checkpoint if wall-clock time has arrived.
+- Final smoke review / docs consistency pass, or handoff at the requested checkpoint if wall-clock time has arrived.
