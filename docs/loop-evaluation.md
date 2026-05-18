@@ -742,3 +742,31 @@ This addresses the practical local analogue to CodeRabbit/IDE automatic review a
 ### Next recommended slice
 
 If time remains before 16:20, do either a history/metrics artifact slice or a final critical docs/schema review; keep every stop at clean validation and push points.
+
+
+## 2026-05-18 15:18 BST — Loop 22: Metrics summary artifact
+
+### Development completed
+
+- Added `crx summarize --format json` for compact machine-readable review metrics.
+- Included finding totals by severity/category, blocking count, local tool failure/timing counts, completion metadata, errors, and gate-style exit code.
+- Updated `scripts/crx-quality-gate.sh` to emit `crx-review.metrics.json` by default with `CRX_METRICS_OUT` override.
+- Documented the metrics artifact in README and CI quality-gate docs, with test coverage for CLI, summary helpers, and shell wrapper wiring.
+
+### Validation
+
+- `npm test` — pass, 77 tests.
+- `npm run build` — pass.
+- `node dist/cli.js --help` — pass and lists `--format text|json|sarif|junit`.
+
+### Production-readiness score
+
+**9.37 / 10**. The local/CI gate now produces a small metrics artifact suitable for history dashboards without adding hosted-service scope or changing existing JSONL/SARIF/JUnit behavior.
+
+### CodeRabbit comparison
+
+This is a lightweight local analogue to review metrics/dashboards: enough for trend artifacts in CI, while hosted analytics and team dashboards remain intentionally deferred.
+
+### Next recommended slice
+
+Run final validation and stop at a clean pushed point unless a critical regression appears.

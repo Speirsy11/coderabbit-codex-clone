@@ -1,6 +1,7 @@
-import type { AgentEvent, Finding, ToolResultEvent } from "./types.js";
+import type { AgentEvent, Finding, FindingCategory, Severity, ToolResultEvent } from "./types.js";
 
-const severities = ["critical", "major", "minor", "trivial", "info"] as const;
+const severities: Severity[] = ["critical", "major", "minor", "trivial", "info"];
+const categories: FindingCategory[] = ["potential_issue", "refactor_suggestion", "nitpick"];
 
 export function summarizeAgentJsonl(input: string): string {
   const events = parseAgentJsonl(input);
@@ -27,6 +28,44 @@ export function summarizeAgentJsonl(input: string): string {
   }
 
   return `${lines.join("\n")}\n`;
+}
+
+export interface AgentJsonlMetrics {
+  findings: { total: number; bySeverity: Record<Severity, number>; byCategory: Record<FindingCategory | "uncategorized", number>; blocking: number };
+  localTools: { total: number; failed: number; blockingFailures: number; timedOut: number; byPhase: Record<"pre_review" | "post_autofix", number> };
+  complete?: { summary: string; exitCode?: number; needsRerun?: boolean; autoFixApplied?: boolean };
+  errors: string[];
+  exitCode: number;
+}
+
+export function summarizeAgentJsonlMetrics(input: string): AgentJsonlMetrics {
+  const events = parseAgentJsonl(input);
+  const { findings, tools, failedTools, blockingTools, complete, errors } = analyzeAgentEvents(events);
+  const bySeverity = Object.fromEntries(severities.map((severity) => [severity, findings.filter((finding) => finding.severity === severity).length])) as Record<Severity, number>;
+  const byCategory = Object.fromEntries([
+    ...categories.map((category) => [category, findings.filter((finding) => finding.category === category).length] as const),
+    ["uncategorized", findings.filter((finding) => !finding.category).length] as const
+  ]) as Record<FindingCategory | "uncategorized", number>;
+  return {
+    findings: { total: findings.length, bySeverity, byCategory, blocking: findings.filter(isBlockingFinding).length },
+    localTools: {
+      total: tools.length,
+      failed: failedTools.length,
+      blockingFailures: blockingTools.length,
+      timedOut: tools.filter((tool) => tool.timedOut).length,
+      byPhase: {
+        pre_review: tools.filter((tool) => !tool.phase || tool.phase === "pre_review").length,
+        post_autofix: tools.filter((tool) => tool.phase === "post_autofix").length
+      }
+    },
+    complete: complete?.type === "complete" ? { summary: complete.summary, exitCode: complete.exitCode, needsRerun: complete.needsRerun, autoFixApplied: complete.autoFixApplied } : undefined,
+    errors: errors.map((event) => event.message),
+    exitCode: agentJsonlExitCode(input)
+  };
+}
+
+export function summarizeAgentJsonlJson(input: string): string {
+  return `${JSON.stringify(summarizeAgentJsonlMetrics(input), null, 2)}\n`;
 }
 
 export function agentJsonlExitCode(input: string): number {

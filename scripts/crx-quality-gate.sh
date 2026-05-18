@@ -7,6 +7,7 @@ config_out="${CRX_CONFIG_OUT:-crx-config.json}"
 summary_out="${CRX_SUMMARY_OUT:-crx-review.txt}"
 sarif_out="${CRX_SARIF_OUT:-crx-review.sarif}"
 junit_out="${CRX_JUNIT_OUT:-crx-review.junit.xml}"
+metrics_out="${CRX_METRICS_OUT:-crx-review.metrics.json}"
 
 if [ "${CRX_SKIP_CONFIG_VALIDATE:-0}" != "1" ]; then
   if ! crx config validate --json > "$config_out"; then
@@ -29,8 +30,10 @@ if [ "${CRX_SKIP_ARTIFACTS:-0}" != "1" ] && [ -s "$out" ]; then
   sarif_code=$?
   crx summarize --format junit "$out" > "$junit_out"
   junit_code=$?
+  crx summarize --format json "$out" > "$metrics_out"
+  metrics_code=$?
   set -e
-  for summarize_code in "$summary_code" "$sarif_code" "$junit_code"; do
+  for summarize_code in "$summary_code" "$sarif_code" "$junit_code" "$metrics_code"; do
     case "$summarize_code" in
       0|3|4)
         ;;

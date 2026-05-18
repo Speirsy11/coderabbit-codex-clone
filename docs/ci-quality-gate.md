@@ -22,6 +22,7 @@ code=$?
 crx summarize crx-review.jsonl > crx-review.txt
 crx summarize --format sarif crx-review.jsonl > crx-review.sarif
 crx summarize --format junit crx-review.jsonl > crx-review.junit.xml
+crx summarize --format json crx-review.jsonl > crx-review.metrics.json
 set -e
 
 case "$code" in
@@ -32,7 +33,7 @@ case "$code" in
 esac
 ```
 
-The reusable `scripts/crx-quality-gate.sh` helper performs the same preflight and writes `crx-config.json`, `crx-review.jsonl`, `crx-review.txt`, `crx-review.sarif`, and `crx-review.junit.xml` by default. Set `CRX_SKIP_ARTIFACTS=1` only when another CI step handles summaries.
+The reusable `scripts/crx-quality-gate.sh` helper performs the same preflight and writes `crx-config.json`, `crx-review.jsonl`, `crx-review.txt`, `crx-review.sarif`, `crx-review.junit.xml`, and `crx-review.metrics.json` by default. Set `CRX_SKIP_ARTIFACTS=1` only when another CI step handles summaries.
 
 ## GitHub Actions example
 
@@ -67,6 +68,7 @@ jobs:
           node dist/cli.js summarize crx-review.jsonl > crx-review.txt
           node dist/cli.js summarize --format sarif crx-review.jsonl > crx-review.sarif
           node dist/cli.js summarize --format junit crx-review.jsonl > crx-review.junit.xml
+          node dist/cli.js summarize --format json crx-review.jsonl > crx-review.metrics.json
           set -e
           cat crx-review.txt
           if [ "$code" -eq 0 ]; then exit 0; fi
@@ -84,6 +86,7 @@ jobs:
             crx-review.txt
             crx-review.sarif
             crx-review.junit.xml
+            crx-review.metrics.json
 ```
 
 ## Config preflight
@@ -149,6 +152,16 @@ scripts/crx-jsonl-summary.mjs crx-review.jsonl
 
 It exits `3` when the artifact contains critical/major findings or blocking tool failures, `4` when the final `complete` event requires a rerun, `1` for error events or invalid JSONL, and `0` otherwise.
 
+## Metrics JSON
+
+Use metrics JSON when you want a tiny artifact for trend dashboards or later history aggregation:
+
+```bash
+crx summarize --format json crx-review.jsonl > crx-review.metrics.json
+```
+
+The JSON includes finding counts by severity/category, blocking finding count, local tool failure/timing counts, final completion metadata, error messages, and the same gate-style exit code that `crx summarize` returns.
+
 ## SARIF export
 
 Use SARIF when your CI system can display code-scanning annotations:
@@ -173,4 +186,4 @@ scripts/crx-jsonl-to-junit.mjs crx-review.jsonl > crx-review.junit.xml
 
 Only blocking findings and blocking local tool failures become failures; a clean artifact emits one passing `crx:pass` testcase.
 
-The `crx summarize` command and standalone artifact scripts preserve gate-style exit codes: `3` for blocking findings/tool failures, `4` when a rerun is required, `1` for error events or invalid JSONL, and `0` otherwise.
+The `crx summarize` command can also emit compact metrics JSON with `--format json` for history or dashboard artifacts. The `crx summarize` command and standalone artifact scripts preserve gate-style exit codes: `3` for blocking findings/tool failures, `4` when a rerun is required, `1` for error events or invalid JSONL, and `0` otherwise.

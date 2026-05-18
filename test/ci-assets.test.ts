@@ -22,6 +22,7 @@ test("GitHub Actions docs preserve review artifacts", async () => {
   assert.match(docs, /crx-review\.jsonl/);
   assert.match(docs, /crx-review\.sarif/);
   assert.match(docs, /crx-review\.junit\.xml/);
+  assert.match(docs, /crx-review\.metrics\.json/);
   assert.match(docs, /crx-config\.json/);
   assert.match(docs, /actions\/upload-artifact@v4/);
 });
@@ -54,6 +55,8 @@ test("quality gate shell wrapper parses and validates config first", async () =>
   assert.match(script, /crx summarize "\$out" > "\$summary_out"/);
   assert.match(script, /crx summarize --format sarif "\$out" > "\$sarif_out"/);
   assert.match(script, /crx summarize --format junit "\$out" > "\$junit_out"/);
+  assert.match(script, /crx summarize --format json "\$out" > "\$metrics_out"/);
+  assert.match(script, /CRX_METRICS_OUT/);
   assert.match(script, /CRX_SKIP_CONFIG_VALIDATE/);
   assert.match(script, /CRX_SKIP_ARTIFACTS/);
 });

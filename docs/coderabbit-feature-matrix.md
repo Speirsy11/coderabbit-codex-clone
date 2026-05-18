@@ -9,13 +9,13 @@ For our goal — **agent-run local/CI code quality review after each change set*
 1. **Hosted review UX:** PR comments, incremental hosted reviews, dashboards, and team analytics are still intentionally out of scope for the local clone.
 2. **Richer configuration import:** only the safe local subset of `.coderabbit.yaml` is mapped; hosted auto-review and managed tool settings are documented but not executed.
 3. **Advanced context:** organization learnings, issue/PR history, MCP context, cross-repo analysis, and AST-grep instruction ecosystems remain deferred.
-4. **Optional polish:** Git hook examples and history/metrics artifacts would improve ergonomics but are no longer blockers for local/CI quality gates.
+4. **Optional polish:** Git hook examples and compact metrics artifacts are implemented; richer history storage would improve ergonomics but is not a blocker for local/CI quality gates.
 
 The previous must-have wedge — **change-set scoped `crx --agent` in CI + path filters/instructions + stable JSONL schema + exit-code gate + second-pass agent loop docs** — is implemented. Future slices should avoid redoing that foundation and focus only on the remaining optional/hosted parity gaps above.
 
 ## Implementation status as of 2026-05-18
 
-- **Implemented local/CI core:** `review --agent`, stable JSONL schema/docs, exit codes `0`/`1`/`3`/`4`, config validation, local tool checks, artifact summaries, SARIF/JUnit export, and CI helper scripts.
+- **Implemented local/CI core:** `review --agent`, stable JSONL schema/docs, exit codes `0`/`1`/`3`/`4`, config validation, local tool checks, artifact summaries, SARIF/JUnit export, compact metrics JSON, and CI helper scripts.
 - **Implemented scope/config subset:** path filters, path instructions, common guideline auto-loading, custom guideline patterns, `chill`/`assertive` review profiles, presets for Node/Python/Ruby, and safe `.coderabbit.yaml`/`.coderabbit.yml` fallback mapping.
 - **Implemented agent-loop support:** bounded second-pass helper, auto-fix rerun signaling, post-fix local-tool verification, exact changed-file context metadata, blocker counts, config-source metadata, and no-auth fixture coverage for CI artifacts.
 - **Deferred by design:** hosted PR bot behavior, dashboards, CodeRabbit API compatibility, organization learnings, MCP/cross-repo context, and fully managed sandboxed tool execution.

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { agentJsonlToJunit } from "../src/junit.js";
 import { agentJsonlToSarif } from "../src/sarif.js";
-import { agentJsonlExitCode, parseAgentJsonl, summarizeAgentJsonl } from "../src/summary.js";
+import { agentJsonlExitCode, parseAgentJsonl, summarizeAgentJsonl, summarizeAgentJsonlJson } from "../src/summary.js";
 
 test("summarizeAgentJsonl highlights blocking findings and tool failures", () => {
   const jsonl = [
@@ -17,6 +17,30 @@ test("summarizeAgentJsonl highlights blocking findings and tool failures", () =>
   assert.match(summary, /MAJOR src\/app\.ts:7 Crash/);
   assert.match(summary, /lint: exit 2/);
 });
+
+
+test("summarizeAgentJsonlJson emits dashboard-friendly metrics", () => {
+  const jsonl = [
+    { type: "finding", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", severity: "critical", category: "potential_issue", fileName: "src/app.ts", title: "Crash", message: "bad", impact: "boom", codegenInstructions: "fix", suggestions: [] },
+    { type: "finding", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", severity: "minor", fileName: "src/view.ts", title: "Nit", message: "small", impact: "noise", codegenInstructions: "tidy", suggestions: [] },
+    { type: "tool_result", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", name: "lint", command: ["npm", "run", "lint"], exitCode: 2, durationMs: 10, passed: false, blocking: true, timedOut: true, phase: "post_autofix" },
+    { type: "complete", protocolVersion: "0.2", schemaVersion: "crx.agent.v0.2", findingsCount: 2, blockingFindingsCount: 1, blockingToolsCount: 1, exitCode: 3, summary: "2 finding(s); blocking local tool failure." }
+  ].map((event) => JSON.stringify(event)).join("\n");
+
+  const metrics = JSON.parse(summarizeAgentJsonlJson(jsonl));
+  assert.equal(metrics.findings.total, 2);
+  assert.equal(metrics.findings.bySeverity.critical, 1);
+  assert.equal(metrics.findings.bySeverity.minor, 1);
+  assert.equal(metrics.findings.byCategory.potential_issue, 1);
+  assert.equal(metrics.findings.byCategory.uncategorized, 1);
+  assert.equal(metrics.findings.blocking, 1);
+  assert.equal(metrics.localTools.blockingFailures, 1);
+  assert.equal(metrics.localTools.timedOut, 1);
+  assert.equal(metrics.localTools.byPhase.pre_review, 0);
+  assert.equal(metrics.localTools.byPhase.post_autofix, 1);
+  assert.equal(metrics.exitCode, 3);
+});
+
 
 test("parseAgentJsonl reports invalid line numbers", () => {
   assert.throws(() => parseAgentJsonl('{"type":"status"}\nnot-json'), /line 2/);

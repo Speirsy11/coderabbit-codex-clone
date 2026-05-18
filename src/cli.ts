@@ -14,7 +14,7 @@ import { buildReviewPrompt } from "./prompt.js";
 import { redactSecrets } from "./redact.js";
 import { effectiveGuidelineFiles, effectivePathFilters, filesFromDiff, renderPathInstructions } from "./scope.js";
 import { agentJsonlToSarif } from "./sarif.js";
-import { agentJsonlExitCode, summarizeAgentJsonl } from "./summary.js";
+import { agentJsonlExitCode, summarizeAgentJsonl, summarizeAgentJsonlJson } from "./summary.js";
 import { hasBlockingToolFailures, renderToolResultsForPrompt, runLocalTools } from "./tools.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
 import type { AgentEvent, ReviewContextEvent, ReviewOptions, ReviewProfile, ReviewType } from "./types.js";
@@ -159,7 +159,7 @@ async function summarize(args: string[]): Promise<number> {
   const format = summarizeFormat(args);
   const file = args.find((arg) => !arg.startsWith("-") && arg !== format);
   const input = file && file !== "-" ? await readFile(resolve(file), "utf8") : await readStdin();
-  process.stdout.write(format === "sarif" ? agentJsonlToSarif(input) : format === "junit" ? agentJsonlToJunit(input) : summarizeAgentJsonl(input));
+  process.stdout.write(format === "sarif" ? agentJsonlToSarif(input) : format === "junit" ? agentJsonlToJunit(input) : format === "json" ? summarizeAgentJsonlJson(input) : summarizeAgentJsonl(input));
   return agentJsonlExitCode(input);
 }
 
@@ -284,12 +284,12 @@ function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
 }
 
-function summarizeFormat(args: string[]): "text" | "sarif" | "junit" {
+function summarizeFormat(args: string[]): "text" | "json" | "sarif" | "junit" {
   const index = args.indexOf("--format");
   if (index < 0) return "text";
   const value = args[index + 1];
-  if (value === "text" || value === "sarif" || value === "junit") return value;
-  throw new Error("--format must be one of text, sarif, junit.");
+  if (value === "text" || value === "json" || value === "sarif" || value === "junit") return value;
+  throw new Error("--format must be one of text, json, sarif, junit.");
 }
 
 function parseType(value: string | undefined): ReviewType {
@@ -342,7 +342,7 @@ function printHelp(): void {
 
 Usage:
   crx [review] [--agent] [--interactive|--tui] [--fix] [--verify-fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
-  crx summarize [--format text|sarif|junit] <crx-review.jsonl|->
+  crx summarize [--format text|json|sarif|junit] <crx-review.jsonl|->
   crx auth status
   crx config init [--preset default|node|python|ruby]
   crx config validate [--json] [--dir path]
@@ -360,6 +360,7 @@ Options:
 
 Summaries:
   crx summarize file.jsonl                 Print finding/tool failure counts and blocking details
+  crx summarize --format json file.jsonl   Emit compact metrics JSON for history artifacts
   crx summarize --format sarif file.jsonl  Convert findings to SARIF 2.1.0
   crx summarize --format junit file.jsonl  Convert blocking findings/tools to JUnit XML
 

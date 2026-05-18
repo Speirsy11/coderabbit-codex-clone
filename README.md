@@ -46,7 +46,7 @@ crx config validate --json
 
 ## CI Quality Gate
 
-For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example and generic shell recipe, `docs/git-hooks.md` for local pre-push recipes, `docs/coderabbit-config-mapping.md` for CodeRabbit config concept mapping, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable helpers are available at `scripts/crx-quality-gate.sh` for one-pass gating, `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop, `scripts/crx-jsonl-summary.mjs` for compact CI summaries, `scripts/crx-jsonl-to-sarif.mjs` for SARIF export, and `scripts/crx-jsonl-to-junit.mjs` for JUnit reports. The built CLI also supports `crx summarize --format text|sarif|junit`.
+For non-interactive automation, run `crx review --agent` and gate on exit codes. See `docs/ci-quality-gate.md` for a GitHub Actions example and generic shell recipe, `docs/git-hooks.md` for local pre-push recipes, `docs/coderabbit-config-mapping.md` for CodeRabbit config concept mapping, and `docs/schema/agent-event.schema.json` for the JSONL event schema. Reusable helpers are available at `scripts/crx-quality-gate.sh` for one-pass gating, `scripts/crx-agent-loop.sh` for a bounded fix/rerun loop, `scripts/crx-jsonl-summary.mjs` for compact CI summaries, `scripts/crx-jsonl-to-sarif.mjs` for SARIF export, and `scripts/crx-jsonl-to-junit.mjs` for JUnit reports. The built CLI also supports `crx summarize --format text|json|sarif|junit`.
 
 ## Agent Loop
 

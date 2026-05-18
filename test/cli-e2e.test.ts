@@ -114,6 +114,10 @@ test("summarize artifact formats preserve blocking exit codes", async () => {
   const junit = runCli(["summarize", "--format", "junit", file]);
   assert.equal(junit.status, 3, junit.stderr);
   assert.match(junit.stdout, /<testsuite name="crx"/);
+
+  const json = runCli(["summarize", "--format", "json", file]);
+  assert.equal(json.status, 3, json.stderr);
+  assert.equal(JSON.parse(json.stdout).findings.bySeverity.major, 1);
 });
 
 test("config validate prints sanitized config JSON", async () => {
@@ -379,4 +383,6 @@ test("quality gate wrapper validates config, review JSONL, and summary artifacts
   assert.match(await readFile(join(dir, "crx-review.txt"), "utf8"), /Blocking tool failures:/);
   assert.equal(JSON.parse(await readFile(join(dir, "crx-review.sarif"), "utf8")).runs[0].tool.driver.name, "crx");
   assert.match(await readFile(join(dir, "crx-review.junit.xml"), "utf8"), /tool:project-check/);
+  const metrics = JSON.parse(await readFile(join(dir, "crx-review.metrics.json"), "utf8"));
+  assert.equal(metrics.localTools.blockingFailures, 1);
 });
