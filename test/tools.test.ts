@@ -12,6 +12,7 @@ test("runs configured local tools without shell interpolation", async () => {
   const results = await runLocalTools([{ name: "unit", command: [process.execPath, script, "hello;not-shell"] }], dir);
   assert.equal(results.length, 1);
   assert.equal(results[0].passed, true);
+  assert.equal(results[0].phase, "pre_review");
   assert.equal(results[0].stdout, "ok:hello;not-shell");
   assert.deepEqual(results[0].command, [process.execPath, script, "hello;not-shell"]);
 });

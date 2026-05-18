@@ -7,17 +7,17 @@ const DEFAULT_TOOL_TIMEOUT_MS = 5 * 60 * 1000;
 const DEFAULT_OUTPUT_LIMIT = 12000;
 const TIMEOUT_KILL_GRACE_MS = 100;
 
-export async function runLocalTools(tools: LocalToolConfig[] | undefined, cwd: string): Promise<ToolResultEvent[]> {
+export async function runLocalTools(tools: LocalToolConfig[] | undefined, cwd: string, phase: ToolResultEvent["phase"] = "pre_review"): Promise<ToolResultEvent[]> {
   const configured = tools ?? [];
   const results: ToolResultEvent[] = [];
   for (const tool of configured) {
     if (tool.enabled === false) continue;
-    results.push(await runLocalTool(tool, cwd));
+    results.push(await runLocalTool(tool, cwd, phase));
   }
   return results;
 }
 
-export async function runLocalTool(tool: LocalToolConfig, cwd: string): Promise<ToolResultEvent> {
+export async function runLocalTool(tool: LocalToolConfig, cwd: string, phase: ToolResultEvent["phase"] = "pre_review"): Promise<ToolResultEvent> {
   const argv = Array.isArray(tool.command) ? tool.command : splitCommand(tool.command);
   const [cmd, ...args] = argv;
   if (!tool.name?.trim()) throw new Error("Local tool config requires a non-empty name.");
@@ -38,6 +38,7 @@ export async function runLocalTool(tool: LocalToolConfig, cwd: string): Promise<
     durationMs,
     passed: result.exitCode === 0,
     blocking: tool.blocking !== false,
+    phase,
     timedOut: result.timedOut,
     severity: result.exitCode === 0 ? undefined : toolFailureSeverity(tool),
     stdout: result.stdout,

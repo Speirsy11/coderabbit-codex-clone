@@ -38,6 +38,10 @@ Review scope and diff metadata.
   "truncated":false,
   "configFiles":[],
   "configSource":"crx.config.json",
+  "changedFiles":["src/app.ts","src/new.ts"],
+  "changedFilesCount":3,
+  "reviewedFilesCount":2,
+  "excludedFilesCount":1,
   "untrackedFiles":["src/new.ts"],
   "skippedUntrackedFiles":[],
   "excludedFiles":["dist/bundle.js"],
@@ -45,7 +49,7 @@ Review scope and diff metadata.
 }
 ```
 
-For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`. The effective config file is listed in `configSource` when one is found (`crx.config.json`, `.coderabbit.yaml`, or `.coderabbit.yml`).
+`changedFiles` lists the files actually included in the reviewed diff before truncation; `changedFilesCount` is the reviewed plus excluded total, and `reviewedFilesCount`/`excludedFilesCount` split that total for CI artifact metadata. For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`. The effective config file is listed in `configSource` when one is found (`crx.config.json`, `.coderabbit.yaml`, or `.coderabbit.yml`).
 
 ### `warning`
 
@@ -57,10 +61,10 @@ Non-fatal quality-gate caveat, such as skipped untracked files or files excluded
 
 ### `tool_result`
 
-Emitted for each configured local tool command before the Codex review. Commands run with `shell: false`; failed blocking tools make the gate exit `3`. Failed tools include a `severity` hint for summaries and artifacts; blocking tools default to `major`, non-blocking tools default to `minor`, and `localTools[].failureSeverity` can override that value.
+Emitted for each configured local tool command before the Codex review. Commands run with `shell: false`; failed blocking tools make the gate exit `3`. Failed tools include a `severity` hint for summaries and artifacts; blocking tools default to `major`, non-blocking tools default to `minor`, and `localTools[].failureSeverity` can override that value. `phase` is `pre_review` for the normal gate and `post_autofix` when `--verify-fix` reruns local tools after an applied patch.
 
 ```json
-{"type":"tool_result","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","name":"lint","command":["npm","run","lint"],"exitCode":1,"durationMs":812,"passed":false,"blocking":true,"timedOut":false,"severity":"major","stdout":"","stderr":"lint failed"}
+{"type":"tool_result","protocolVersion":"0.2","schemaVersion":"crx.agent.v0.2","name":"lint","command":["npm","run","lint"],"exitCode":1,"durationMs":812,"passed":false,"blocking":true,"phase":"pre_review","timedOut":false,"severity":"major","stdout":"","stderr":"lint failed"}
 ```
 
 ### `finding`
@@ -130,5 +134,5 @@ Terminal failure event.
 1. Run `crx review --agent` after a coherent change set.
 2. Parse stdout JSONL only.
 3. If exit `3`, fix only `critical`/`major` findings first.
-4. If using `--fix` and exit `4`, inspect/keep the patch if appropriate, then rerun once.
+4. If using `--fix` and exit `4`, inspect/keep the patch if appropriate, then rerun once. Add `--verify-fix` when configured local tools should run again immediately after the patch is applied.
 5. Treat `minor`, `trivial`, and `info` as advisory unless they expose real production risk.

@@ -26,6 +26,7 @@ crx review
 crx review --agent
 crx review --tui
 crx review --fix
+crx review --fix --verify-fix
 crx review -t uncommitted
 crx review --base main
 crx review --base-commit abc123
@@ -114,7 +115,7 @@ crx --fix -t uncommitted
 
 ## Safety
 
-`crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. Review prompts are sent to Codex over stdin rather than process argv. Extra instruction files must stay inside the repo and symlinks are rejected. Auto-fix mode applies only patches that pass `git apply --check`, but you should still inspect the resulting diff before committing.
+`crx` redacts likely secrets from diffs before sending them to Codex, including common API tokens, dotenv secret assignments, and private keys. Git and Codex commands are run with argument arrays, not shell string concatenation. Review prompts are sent to Codex over stdin rather than process argv. Extra instruction files must stay inside the repo and symlinks are rejected. Auto-fix mode applies only patches that pass `git apply --check`, but you should still inspect the resulting diff before committing. Add `--verify-fix` to rerun configured `localTools` after an applied patch and emit `post_autofix` tool-result events before the required rerun.
 
 `crx config init --preset node|python|ruby` writes a starter config that runs `npm test`/`npm run build`, `pytest`/`ruff`, or `rspec`/`rubocop` as blocking local tools. Use `crx config validate --json` to inspect the sanitized effective config and source file. Configure optional local project checks with `localTools` in `crx.config.json`; each command runs without shell interpolation, emits a `tool_result` event, is included in the Codex prompt with failure severity, and blocks the gate by default unless `blocking: false` is set. Use `failureSeverity` to tune failed-tool severity in JSONL/SARIF/JUnit summaries.
 

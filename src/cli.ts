@@ -75,6 +75,10 @@ async function review(args: string[]): Promise<number> {
       truncated: collected.truncated,
       configFiles: options.configFiles,
       configSource: loadedConfigSource,
+      changedFiles: collected.changedFiles,
+      changedFilesCount: collected.changedFiles.length + collected.excludedFiles.length,
+      reviewedFilesCount: collected.changedFiles.length,
+      excludedFilesCount: collected.excludedFiles.length,
       untrackedFiles: collected.untrackedFiles,
       skippedUntrackedFiles: collected.skippedUntrackedFiles,
       excludedFiles: collected.excludedFiles
@@ -120,6 +124,13 @@ async function review(args: string[]): Promise<number> {
       const afterStatus = await worktreeStatus(repoDir);
       events.push(worktreeStatusEvent("after_autofix", afterStatus));
       events.push({ type: "autofix", applied: result.applied, summary: result.summary, changedFiles: result.changedFiles ?? [], needsRerun: result.applied, rerunCommand: result.applied ? buildRerunCommand(options) : undefined });
+      if (result.applied && options.verifyFix && config.localTools?.some((tool) => tool.enabled !== false)) {
+        events.push(statusEvent("Running post-fix local tools."));
+        if (options.mode !== "agent") tui.status("Running post-fix local tools");
+        const postFixToolResults = await runLocalTools(config.localTools, repoDir, "post_autofix");
+        toolResults.push(...postFixToolResults);
+        events.push(...postFixToolResults);
+      }
       if (options.mode !== "agent") process.stdout.write(`${renderAutoFixResult(result)}\n`);
     }
 
@@ -204,7 +215,8 @@ function parseReviewArgs(args: string[]): ReviewOptions {
     color: true,
     maxDiffBytes: DEFAULT_MAX_DIFF_BYTES,
     mode: "plain",
-    fix: false
+    fix: false,
+    verifyFix: false
   };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -212,6 +224,7 @@ function parseReviewArgs(args: string[]): ReviewOptions {
     else if (arg === "--plain") options.mode = "plain";
     else if (arg === "--interactive" || arg === "--tui") options.mode = "interactive";
     else if (arg === "--fix") options.fix = true;
+    else if (arg === "--verify-fix") options.verifyFix = true;
     else if (arg === "--no-color") options.color = false;
     else if (arg === "-t" || arg === "--type") options.type = parseType(args[++i]);
     else if (arg === "--base") options.base = required(args[++i], arg);
@@ -328,7 +341,7 @@ function printHelp(): void {
   console.log(`crx - local CodeRabbit-style review with Codex CLI
 
 Usage:
-  crx [review] [--agent] [--interactive|--tui] [--fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
+  crx [review] [--agent] [--interactive|--tui] [--fix] [--verify-fix] [-t all|committed|uncommitted] [--base branch] [--base-commit sha]
   crx summarize [--format text|sarif|junit] <crx-review.jsonl|->
   crx auth status
   crx config init [--preset default|node|python|ruby]
@@ -340,6 +353,7 @@ Options:
   --max-diff-bytes <n>      Maximum diff bytes sent to Codex
   --profile <mode>          Review noise profile: chill or assertive
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
+  --verify-fix              After an applied fix, rerun configured local tools and emit post_autofix tool_result events
   --no-color                Disable color output
   --preset <name>           Config init preset: default, node, python, ruby
   --json                    Print machine-readable config validate output

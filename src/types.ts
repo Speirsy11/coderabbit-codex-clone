@@ -30,6 +30,10 @@ export interface ReviewContextEvent {
   truncated: boolean;
   configFiles: string[];
   configSource?: string;
+  changedFiles?: string[];
+  changedFilesCount?: number;
+  reviewedFilesCount?: number;
+  excludedFilesCount?: number;
   untrackedFiles?: string[];
   skippedUntrackedFiles?: string[];
   excludedFiles?: string[];
@@ -95,6 +99,7 @@ export interface ToolResultEvent {
   durationMs: number;
   passed: boolean;
   blocking: boolean;
+  phase?: "pre_review" | "post_autofix";
   timedOut?: boolean;
   severity?: Severity;
   stdout?: string;
@@ -143,5 +148,6 @@ export interface ReviewOptions {
   reviewProfile?: ReviewProfile;
   mode: "plain" | "agent" | "interactive";
   fix: boolean;
+  verifyFix: boolean;
   pathFilters?: string[];
 }

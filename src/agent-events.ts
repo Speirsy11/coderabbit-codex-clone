@@ -23,6 +23,10 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       requireBoolean(value, "truncated", errors);
       requireStringArray(value, "configFiles", errors);
       optionalString(value, "configSource", errors);
+      optionalStringArray(value, "changedFiles", errors);
+      optionalNonNegativeInteger(value, "changedFilesCount", errors);
+      optionalNonNegativeInteger(value, "reviewedFilesCount", errors);
+      optionalNonNegativeInteger(value, "excludedFilesCount", errors);
       optionalStringArray(value, "instructionFiles", errors);
       optionalStringArray(value, "untrackedFiles", errors);
       optionalStringArray(value, "skippedUntrackedFiles", errors);
@@ -51,6 +55,7 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       requireNumber(value, "durationMs", errors, { integer: true, min: 0 });
       requireBoolean(value, "passed", errors);
       requireBoolean(value, "blocking", errors);
+      optionalOneOf(value, "phase", ["pre_review", "post_autofix"], errors);
       optionalBoolean(value, "timedOut", errors);
       optionalOneOf(value, "severity", ["critical", "major", "minor", "trivial", "info"], errors);
       optionalString(value, "stdout", errors);

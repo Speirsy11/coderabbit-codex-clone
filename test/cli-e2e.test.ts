@@ -206,6 +206,23 @@ test("agent auto-fix exits 4 and marks rerun required after applying a patch", a
   assert.equal(await readFile(join(dir, "app.ts"), "utf8"), "export const value = 3;\n");
 });
 
+test("agent auto-fix can verify with post-fix local tools", async () => {
+  const dir = await createRepo();
+  await writeFile(join(dir, "app.ts"), "export const value = 2;\n");
+  await writeFile(join(dir, "crx.config.json"), JSON.stringify({
+    localTools: [{ name: "verify", command: [process.execPath, "-e", "process.stdout.write('verified')"] }]
+  }));
+  const mock = await writeMockCodex("fix");
+  const result = runCli(["review", "--agent", "--fix", "--verify-fix", "--dir", dir, "--type", "uncommitted"], mock);
+  assert.equal(result.status, 4, result.stdout + result.stderr);
+  const events = parseJsonl(result.stdout);
+  const toolPhases = events.filter((e) => e.type === "tool_result").map((e) => e.phase);
+  assert.deepEqual(toolPhases, ["pre_review", "post_autofix"]);
+  assert.equal(events.some((e) => e.type === "status" && e.message === "Running post-fix local tools."), true);
+  assert.equal(events.at(-1).exitCode, 4);
+});
+
+
 test("untracked text files are included in uncommitted review context", async () => {
   const dir = await createRepo();
   await writeFile(join(dir, "new-file.ts"), "export const created = true;\n");
@@ -215,6 +232,10 @@ test("untracked text files are included in uncommitted review context", async ()
   const events = parseJsonl(result.stdout);
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.untrackedFiles, ["new-file.ts"]);
+  assert.deepEqual(context.changedFiles, ["new-file.ts"]);
+  assert.equal(context.changedFilesCount, 1);
+  assert.equal(context.reviewedFilesCount, 1);
+  assert.equal(context.excludedFilesCount, 0);
 });
 
 
@@ -238,6 +259,10 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   const events = parseJsonl(result.stdout);
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.excludedFiles, ["dist/bundle.js"]);
+  assert.deepEqual(context.changedFiles, ["AGENTS.md", "crx.config.json", "src/feature.ts"]);
+  assert.equal(context.changedFilesCount, 4);
+  assert.equal(context.reviewedFilesCount, 3);
+  assert.equal(context.excludedFilesCount, 1);
   assert.equal(context.configSource, "crx.config.json");
   assert.ok(context.instructionFiles.includes("AGENTS.md"));
   assert.equal(events.some((e) => e.type === "warning" && e.files?.includes("dist/bundle.js")), true);
