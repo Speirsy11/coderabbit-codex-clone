@@ -125,13 +125,15 @@ It exits `3` when the artifact contains critical/major findings or blocking tool
 
 ## SARIF export
 
-Use `scripts/crx-jsonl-to-sarif.mjs` when your CI system can display SARIF/code-scanning annotations:
+Use SARIF when your CI system can display code-scanning annotations:
 
 ```bash
+crx summarize --format sarif crx-review.jsonl > crx-review.sarif
+# or, without the built CLI:
 scripts/crx-jsonl-to-sarif.mjs crx-review.jsonl > crx-review.sarif
 ```
 
-Critical and major findings become SARIF `error` results; minor findings become `warning`; trivial/info findings become `note`. The script exits `3` when any SARIF error is present.
+Critical and major findings become SARIF `error` results; minor findings become `warning`; trivial/info findings become `note`.
 
 ## JUnit export
 
@@ -145,13 +147,4 @@ scripts/crx-jsonl-to-junit.mjs crx-review.jsonl > crx-review.junit.xml
 
 Only blocking findings and blocking local tool failures become failures; a clean artifact emits one passing `crx:pass` testcase.
 
-
-## JUnit export
-
-Convert blocking findings and blocking local tool failures to JUnit XML for CI systems that render test reports:
-
-```bash
-crx summarize --format junit crx-review.jsonl > crx-review.junit.xml
-```
-
-Clean artifacts produce a passing `crx:pass` test case; blocking findings and tool failures become failing test cases with the relevant details.
+The `crx summarize` command and standalone artifact scripts preserve gate-style exit codes: `3` for blocking findings/tool failures, `4` when a rerun is required, `1` for error events or invalid JSONL, and `0` otherwise.
