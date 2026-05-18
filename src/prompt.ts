@@ -1,5 +1,8 @@
 import type { CrxConfig, ReviewOptions } from "./types.js";
 
+const MAX_INSTRUCTION_CONTEXT_CHARS = 30000;
+const MAX_TOOL_CONTEXT_CHARS = 20000;
+
 export function buildReviewPrompt(input: {
   options: ReviewOptions;
   diff: string;
@@ -41,13 +44,13 @@ Review preferences:
 ${prefs}
 
 Additional instruction files:
-${input.configText || "(none)"}
+${compactContext(input.configText, MAX_INSTRUCTION_CONTEXT_CHARS, "instruction context") || "(none)"}
 
 Path-specific instructions for changed files:
 ${input.pathInstructionText || "(none)"}
 
 Local tool results:
-${input.toolResultText || "(none)"}
+${compactContext(input.toolResultText, MAX_TOOL_CONTEXT_CHARS, "local tool context") || "(none)"}
 
 Diff truncated: ${input.truncated ? "yes" : "no"}
 Review type: ${input.options.type}
@@ -55,4 +58,10 @@ Review type: ${input.options.type}
 Review the diff below. Report only real, actionable issues introduced or exposed by this diff. Use category potential_issue for correctness/security/reliability risks, refactor_suggestion for maintainability improvements, and nitpick for low-priority style concerns.
 
 ${input.diff}`;
+}
+
+function compactContext(text: string | undefined, limit: number, label: string): string {
+  if (!text) return "";
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit)}\n\n[CRX_${label.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_TRUNCATED: original ${text.length} chars, shown ${limit} chars]`;
 }
