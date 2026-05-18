@@ -29,6 +29,7 @@ export interface ReviewContextEvent {
   diffBytes: number;
   truncated: boolean;
   configFiles: string[];
+  configSource?: string;
   untrackedFiles?: string[];
   skippedUntrackedFiles?: string[];
   excludedFiles?: string[];

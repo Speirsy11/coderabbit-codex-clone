@@ -26,6 +26,7 @@
           "diffBytes": { "type": "integer", "minimum": 0 },
           "truncated": { "type": "boolean" },
           "configFiles": { "type": "array", "items": { "type": "string" } },
+          "configSource": { "type": "string" },
           "instructionFiles": { "type": "array", "items": { "type": "string" } },
           "untrackedFiles": { "type": "array", "items": { "type": "string" } },
           "skippedUntrackedFiles": { "type": "array", "items": { "type": "string" } },

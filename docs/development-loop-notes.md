@@ -308,3 +308,22 @@ Validation:
 Next likely gap:
 
 - Final end-to-end smoke review or stop/handoff at checkpoint.
+
+## 2026-05-18 15:00 BST — Review context config source v1.0
+
+Evaluation source: after adding native plus CodeRabbit fallback config, agents need to know which config source shaped a review.
+
+Implemented:
+
+- Added optional `review_context.configSource` to JSONL output.
+- Values identify `crx.config.json`, `.coderabbit.yaml`, or `.coderabbit.yml` when present.
+- Updated runtime validation, JSON schema, agent contract docs, and E2E coverage.
+
+Validation:
+
+- `npm test` passed: 72/72.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Final smoke review / generated-schema validator exploration.

@@ -681,3 +681,14 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: final smoke review and generated-schema validator exploration.
+
+## 2026-05-18 update — Review context config source v1.0
+
+Implemented:
+
+- Added `configSource` to `review_context` events so agents can see which config file affected review scope and prompts.
+- Updated schema, runtime validator, agent docs, and E2E tests.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: final smoke review and generated-schema validator exploration.

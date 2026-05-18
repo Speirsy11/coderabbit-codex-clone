@@ -55,6 +55,7 @@ async function review(args: string[]): Promise<number> {
   const repoDir = await assertGitRepo(options.dir);
   options.dir = repoDir;
   const config = await loadConfig(repoDir);
+  const loadedConfigSource = await configSource(repoDir);
   options.maxDiffBytes = options.maxDiffBytes || config.maxDiffBytes || DEFAULT_MAX_DIFF_BYTES;
   options.reviewProfile = options.reviewProfile ?? config.reviewProfile ?? "chill";
   options.pathFilters = effectivePathFilters(config);
@@ -73,6 +74,7 @@ async function review(args: string[]): Promise<number> {
       diffBytes: collected.bytes,
       truncated: collected.truncated,
       configFiles: options.configFiles,
+      configSource: loadedConfigSource,
       untrackedFiles: collected.untrackedFiles,
       skippedUntrackedFiles: collected.skippedUntrackedFiles,
       excludedFiles: collected.excludedFiles

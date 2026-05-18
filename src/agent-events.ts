@@ -22,6 +22,7 @@ export function validateAgentEvent(event: AgentEvent): string[] {
       requireNumber(value, "diffBytes", errors, { integer: true, min: 0 });
       requireBoolean(value, "truncated", errors);
       requireStringArray(value, "configFiles", errors);
+      optionalString(value, "configSource", errors);
       optionalStringArray(value, "instructionFiles", errors);
       optionalStringArray(value, "untrackedFiles", errors);
       optionalStringArray(value, "skippedUntrackedFiles", errors);

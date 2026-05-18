@@ -37,6 +37,7 @@ Review scope and diff metadata.
   "diffBytes":1234,
   "truncated":false,
   "configFiles":[],
+  "configSource":"crx.config.json",
   "untrackedFiles":["src/new.ts"],
   "skippedUntrackedFiles":[],
   "excludedFiles":["dist/bundle.js"],
@@ -44,7 +45,7 @@ Review scope and diff metadata.
 }
 ```
 
-For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`.
+For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`. The effective config file is listed in `configSource` when one is found (`crx.config.json`, `.coderabbit.yaml`, or `.coderabbit.yml`).
 
 ### `warning`
 

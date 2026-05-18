@@ -234,6 +234,7 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   const events = parseJsonl(result.stdout);
   const context = events.find((e) => e.type === "review_context");
   assert.deepEqual(context.excludedFiles, ["dist/bundle.js"]);
+  assert.equal(context.configSource, "crx.config.json");
   assert.ok(context.instructionFiles.includes("AGENTS.md"));
   assert.equal(events.some((e) => e.type === "warning" && e.files?.includes("dist/bundle.js")), true);
 
