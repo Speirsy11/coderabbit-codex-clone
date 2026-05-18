@@ -386,3 +386,29 @@ Add a final validation/evaluation pass and choose another small artifact/config 
 ### Chosen next slice
 
 Run a final validation/evaluation checkpoint, then continue with docs/artifact polish if still before the deadline.
+
+
+## 2026-05-18 14:48 BST — Loop 12: Artifact exit-code regression lock v0.1
+
+### Development completed
+
+- Commit `ef3e033` (`test: lock summarize artifact exit codes`).
+- Added E2E coverage proving `crx summarize --format sarif` and `crx summarize --format junit` preserve blocking quality-gate exit code `3` while emitting parseable artifacts.
+- Validated the now-landed SARIF/JUnit artifact path remains safe for CI consumers that gate on the summarize command as well as standalone scripts.
+
+### Validation
+
+- `npm test` — pass, 62 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**8.9 / 10**. The agent-run quality gate now has tested JSONL, text, SARIF, and JUnit artifact paths with consistent blocking exit semantics, making it substantially easier to wire into CI without bespoke parsing.
+
+### CodeRabbit comparison
+
+`crx` still does not provide CodeRabbit’s hosted PR bot, dashboards, organization learnings, or managed cloud execution. For local/CI agent workflows, it now covers the core review loop, deterministic local-tool signals, rerun-aware auto-fix handling, scoped review context, and common CI artifact outputs.
+
+### Next recommended slice
+
+Add a small `.coderabbit.yaml`/CodeRabbit-concept mapping doc or importer for review profile, path filters, and instructions so teams migrating from CodeRabbit can bootstrap equivalent local `crx.config.json` settings quickly.
