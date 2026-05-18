@@ -19,6 +19,7 @@ test("sanitizeConfig keeps only supported typed values", () => {
   const config = sanitizeConfig({
     codexCommand: 123,
     maxDiffBytes: 999,
+    reviewProfile: "assertive",
     reviewPreferences: [" prefer safety ", 7, ""],
     pathFilters: [" dist/** ", null],
     pathInstructions: [
@@ -36,6 +37,7 @@ test("sanitizeConfig keeps only supported typed values", () => {
 
   assert.equal(config.codexCommand, "npx -y @openai/codex");
   assert.equal(config.maxDiffBytes, 180000);
+  assert.equal(config.reviewProfile, "assertive");
   assert.deepEqual(config.reviewPreferences, ["prefer safety"]);
   assert.deepEqual(config.pathFilters, ["dist/**"]);
   assert.deepEqual(config.pathInstructions, [

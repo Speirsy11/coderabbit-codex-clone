@@ -99,6 +99,12 @@ test("invalid review option exits with controlled error and no stack trace", () 
   assert.doesNotMatch(result.stderr, /at .*src\/cli|Error:/);
 });
 
+test("invalid profile exits with controlled error", () => {
+  const result = runCli(["review", "--profile", "noisy"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /--profile must be one of chill, assertive/);
+});
+
 test("agent mode emits JSONL-only stdout and exits 0 for zero findings", async () => {
   const dir = await createRepo();
   await writeFile(join(dir, "app.ts"), "export const value = 2;\n");
@@ -170,6 +176,7 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   await mkdir(join(dir, "src"));
   await writeFile(join(dir, "AGENTS.md"), "Project rule: prefer safe CLI exits.\n");
   await writeFile(join(dir, "crx.config.json"), JSON.stringify({
+    reviewProfile: "assertive",
     pathFilters: ["dist/**"],
     pathInstructions: [{ pattern: "src/**/*.ts", instructions: ["Check TypeScript runtime behavior."] }]
   }));
@@ -187,6 +194,7 @@ test("path filters, path instructions, and auto guidelines shape the review prom
   assert.equal(events.some((e) => e.type === "warning" && e.files?.includes("dist/bundle.js")), true);
 
   const prompt = await readFile(capture, "utf8");
+  assert.match(prompt, /Review profile: assertive/);
   assert.match(prompt, /Project rule: prefer safe CLI exits/);
   assert.match(prompt, /Check TypeScript runtime behavior/);
   assert.match(prompt, /src\/feature\.ts/);

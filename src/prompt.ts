@@ -10,6 +10,10 @@ export function buildReviewPrompt(input: {
   config: CrxConfig;
 }): string {
   const prefs = input.config.reviewPreferences?.map((p) => `- ${p}`).join("\n") || "- Focus on actionable correctness and security findings.";
+  const profile = input.options.reviewProfile ?? input.config.reviewProfile ?? "chill";
+  const profileInstruction = profile === "assertive"
+    ? "Assertive: include concrete minor issues and maintainability risks when they are actionable and grounded in this diff."
+    : "Chill: report only production-relevant issues; avoid nits, style-only comments, and low-confidence suggestions.";
   return `You are reviewing a local Git diff for a CodeRabbit-style CLI clone named crx.
 
 Return ONLY JSON. Do not wrap it in markdown. Schema:
@@ -28,6 +32,9 @@ Return ONLY JSON. Do not wrap it in markdown. Schema:
     }
   ]
 }
+
+Review profile: ${profile}
+${profileInstruction}
 
 Review preferences:
 ${prefs}

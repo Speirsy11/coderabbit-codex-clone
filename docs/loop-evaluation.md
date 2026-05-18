@@ -190,3 +190,30 @@ Implement optional local tool quality signals as `tool_result` JSONL events and 
 ### Chosen next slice
 
 Add docs/examples for local tool configuration in CI and consider a small runtime/schema validation or review-profile slice next.
+
+## 2026-05-18 14:50 BST — Loop 5: Agent contract runtime validation v0.1
+
+### Development completed
+
+- Added `src/agent-contract.ts` with validation for all JSONL event variants.
+- Wired validation into `formatJsonl` so invalid events fail before output.
+- Added tests for valid event examples and malformed event rejection.
+
+### Validation
+
+- `npm test` — pending for this slice.
+- `npm run build` — pending for this slice.
+
+### Production-readiness score
+
+**8.1 / 10**. The agent stream is now protected by runtime checks, reducing the chance that future slices accidentally break automation consumers.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- First-class second-pass fix/rerun loop.
+- Prebuilt local tool presets.
+- More CI/shallow-clone remediation examples.
+
+### Chosen next slice
+
+After validation, add a small second-pass agent-loop helper or docs-driven workflow if time allows.

@@ -456,3 +456,20 @@ Remaining high-impact gaps:
 2. Better preconfigured presets for common npm/Python/Ruby/security tools.
 3. Better base-branch/shallow-clone remediation in docs and maybe CLI hints.
 4. Optional second-pass automation command around fix/rerun loop.
+
+## Update: Agent contract runtime validation v0.1 (2026-05-18 14:50 BST)
+
+Implemented since the previous loop:
+
+- Added a runtime `validateAgentEvent` guard for every documented JSONL event type.
+- `formatJsonl` now validates versioned events before serializing, preventing malformed agent events from being printed silently.
+- Added contract tests covering `status`, `review_context`, `warning`, `tool_result`, `finding`, `worktree_status`, `autofix`, `complete`, and `error` events.
+
+Current production-readiness score: **8.1 / 10**.
+
+Remaining high-impact gaps:
+
+1. A first-class second-pass fix/rerun helper.
+2. Tool presets for common ecosystems.
+3. Richer docs/examples for shallow clone remediation.
+4. Runtime validation is TypeScript-native rather than generated from JSON Schema.

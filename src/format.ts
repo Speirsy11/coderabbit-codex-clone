@@ -1,10 +1,17 @@
 import { AGENT_PROTOCOL_VERSION, AGENT_SCHEMA_VERSION } from "./protocol.js";
+import { assertAgentEvent } from "./agent-events.js";
 import type { AgentEvent, Finding } from "./types.js";
 
 const order = ["critical", "major", "minor", "trivial", "info"] as const;
 
 export function formatJsonl(events: AgentEvent[]): string {
-  return events.map((event) => JSON.stringify(withProtocol(event))).join("\n") + "\n";
+  return events
+    .map((event) => {
+      const withVersion = withProtocol(event);
+      assertAgentEvent(withVersion);
+      return JSON.stringify(withVersion);
+    })
+    .join("\n") + "\n";
 }
 
 function withProtocol(event: AgentEvent): AgentEvent {

@@ -8,6 +8,7 @@ export function defaultConfig(): CrxConfig {
   return {
     codexCommand: "npx -y @openai/codex",
     maxDiffBytes: 180000,
+    reviewProfile: "chill",
     reviewPreferences: [
       "Prioritize production bugs, security issues, command injection, secret leakage, malformed JSON, diff truncation, and Git edge cases.",
       "Do not nitpick style unless it causes a real maintainability or correctness risk.",
@@ -49,6 +50,7 @@ export function sanitizeConfig(input: Record<string, unknown>, defaults: CrxConf
 
   if (isNonEmptyString(input.codexCommand)) config.codexCommand = input.codexCommand.trim();
   if (Number.isInteger(input.maxDiffBytes) && (input.maxDiffBytes as number) >= 1000) config.maxDiffBytes = input.maxDiffBytes as number;
+  if (input.reviewProfile === "chill" || input.reviewProfile === "assertive") config.reviewProfile = input.reviewProfile;
   if (Array.isArray(input.reviewPreferences)) config.reviewPreferences = input.reviewPreferences.filter(isNonEmptyString).map((value) => value.trim()).slice(0, 50);
   if (Array.isArray(input.pathFilters)) config.pathFilters = input.pathFilters.filter(isNonEmptyString).map((value) => value.trim()).slice(0, 200);
 

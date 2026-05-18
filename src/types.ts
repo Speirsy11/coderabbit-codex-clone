@@ -1,6 +1,7 @@
 export type Severity = "critical" | "major" | "minor" | "trivial" | "info";
 
 export type ReviewType = "all" | "committed" | "uncommitted";
+export type ReviewProfile = "chill" | "assertive";
 
 export interface Finding {
   type: "finding";
@@ -116,6 +117,7 @@ export interface CrxConfig {
   codexCommand?: string;
   reviewPreferences?: string[];
   maxDiffBytes?: number;
+  reviewProfile?: ReviewProfile;
   pathFilters?: string[];
   pathInstructions?: { pattern: string; instructions: string | string[] }[];
   codeGuidelines?: { filePatterns?: string[] };
@@ -130,6 +132,7 @@ export interface ReviewOptions {
   configFiles: string[];
   color: boolean;
   maxDiffBytes: number;
+  reviewProfile?: ReviewProfile;
   mode: "plain" | "agent" | "interactive";
   fix: boolean;
   pathFilters?: string[];

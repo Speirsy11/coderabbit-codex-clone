@@ -13,7 +13,7 @@ import { redactSecrets } from "./redact.js";
 import { effectiveGuidelineFiles, effectivePathFilters, filesFromDiff, renderPathInstructions } from "./scope.js";
 import { hasBlockingToolFailures, renderToolResultsForPrompt, runLocalTools } from "./tools.js";
 import { askAutoFix, renderAutoFixResult, ReviewTui } from "./tui.js";
-import type { AgentEvent, ReviewContextEvent, ReviewOptions, ReviewType } from "./types.js";
+import type { AgentEvent, ReviewContextEvent, ReviewOptions, ReviewProfile, ReviewType } from "./types.js";
 
 const DEFAULT_MAX_DIFF_BYTES = 180000;
 
@@ -50,6 +50,7 @@ async function review(args: string[]): Promise<number> {
   options.dir = repoDir;
   const config = await loadConfig(repoDir);
   options.maxDiffBytes = options.maxDiffBytes || config.maxDiffBytes || DEFAULT_MAX_DIFF_BYTES;
+  options.reviewProfile = options.reviewProfile ?? config.reviewProfile ?? "chill";
   options.pathFilters = effectivePathFilters(config);
   const events: AgentEvent[] = [];
   try {
@@ -164,6 +165,7 @@ function parseReviewArgs(args: string[]): ReviewOptions {
     else if (arg === "--base-commit") options.baseCommit = required(args[++i], arg);
     else if (arg === "--dir") options.dir = resolve(required(args[++i], arg));
     else if (arg === "--max-diff-bytes") options.maxDiffBytes = Number.parseInt(required(args[++i], arg), 10);
+    else if (arg === "--profile") options.reviewProfile = parseProfile(args[++i]);
     else if (arg === "-c" || arg === "--config") {
       while (args[i + 1] && !args[i + 1].startsWith("-")) options.configFiles.push(args[++i]);
     } else {
@@ -221,6 +223,11 @@ function parseType(value: string | undefined): ReviewType {
   throw new Error("--type must be one of all, committed, uncommitted.");
 }
 
+function parseProfile(value: string | undefined): ReviewProfile {
+  if (value === "chill" || value === "assertive") return value;
+  throw new Error("--profile must be one of chill, assertive.");
+}
+
 function required(value: string | undefined, flag: string): string {
   if (!value) throw new Error(`${flag} requires a value.`);
   return value;
@@ -247,6 +254,7 @@ function buildRerunCommand(options: ReviewOptions): string {
   const parts = ["crx", "review", "--agent", "--type", options.type];
   if (options.base) parts.push("--base", options.base);
   if (options.baseCommit) parts.push("--base-commit", options.baseCommit);
+  if (options.reviewProfile) parts.push("--profile", options.reviewProfile);
   for (const file of options.configFiles) parts.push("--config", file);
   return parts.join(" ");
 }
@@ -267,6 +275,7 @@ Options:
   --dir <path>              Git repository directory
   -c, --config <files...>   Extra instruction files inside the repo
   --max-diff-bytes <n>      Maximum diff bytes sent to Codex
+  --profile <mode>          Review noise profile: chill or assertive
   --fix                     Ask Codex to generate and apply a minimal git patch for findings
   --no-color                Disable color output
 
