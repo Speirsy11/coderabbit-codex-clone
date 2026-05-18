@@ -54,7 +54,27 @@ async function collectDiffText(options: ReviewOptions): Promise<{ diff: string; 
     if (staged.code === 0 && unstaged.code === 0) return appendUntracked(options, [staged.stdout, unstaged.stdout].filter(Boolean).join("\n"));
   }
 
+  if (options.base || options.baseCommit) {
+    throw new Error(await baseDiffError(options, result.stderr || result.stdout));
+  }
+
   throw new Error(result.stderr || "git diff failed");
+}
+
+async function baseDiffError(options: ReviewOptions, raw: string): Promise<string> {
+  const target = options.baseCommit || options.base || "base";
+  const kind = options.baseCommit ? "base commit" : "base branch";
+  const mergeBase = await runGit(["merge-base", target, "HEAD"], options.dir);
+  const missingMergeBase = mergeBase.code !== 0;
+  const lines = [
+    `Unable to diff against ${kind} ${JSON.stringify(target)} with ${target}...HEAD.`,
+    raw.trim() ? `Git said: ${raw.trim()}` : undefined,
+    missingMergeBase ? "No merge base was found. This commonly happens in shallow clones, fresh CI checkouts, or when the base ref has not been fetched." : undefined,
+    options.base
+      ? `Try: git fetch origin ${target} --depth=50, then rerun crx review --base ${target}. In GitHub Actions, use actions/checkout with fetch-depth: 0 for reliable base reviews.`
+      : `Try fetching the missing commit history or use --base with a fetched branch name. In GitHub Actions, use actions/checkout with fetch-depth: 0.`
+  ].filter(Boolean);
+  return lines.join("\n");
 }
 
 async function appendUntracked(options: ReviewOptions, diff: string): Promise<{ diff: string; untrackedFiles: string[]; skippedUntrackedFiles: string[] }> {

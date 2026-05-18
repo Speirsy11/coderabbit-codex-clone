@@ -68,3 +68,22 @@ Validation:
 Next likely gap:
 
 - Friendlier base-branch/shallow-clone remediation, or CI examples for GitHub Actions/generic shell.
+
+## 2026-05-18 14:55–15:00 BST — Base diff remediation v0.5
+
+Evaluation source: current audit gap about brittle `--base` behavior in shallow/fresh clones.
+
+Implemented:
+
+- Added a friendly base/base-commit diff error when `git diff base...HEAD` fails.
+- The error includes the target ref, raw Git message, likely shallow/unfetched-branch cause, a `git fetch origin <base> --depth=50` remediation for branch bases, and a GitHub Actions `fetch-depth: 0` note.
+- Added a regression test for missing/unfetched base remediation text.
+
+Validation:
+
+- `npm test` passed: 39/39.
+- `npm run build` passed.
+
+Next likely gap:
+
+- Review current docs again and choose remaining highest-impact quality-gate gap; likely schema/docs polish or stricter config validation.

@@ -396,3 +396,15 @@ Implemented:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: base-branch/shallow-clone remediation and CI examples for agent quality-gate use.
+
+## 2026-05-18 update — Base diff remediation v0.5
+
+Implemented:
+
+- Failed `--base` / `--base-commit` diffs now produce a targeted remediation message instead of raw Git failure text alone.
+- Messages call out shallow/fresh CI checkouts, unfetched refs, `git fetch origin <base> --depth=50`, and GitHub Actions `fetch-depth: 0`.
+- Added regression coverage for missing base remediation.
+
+Validation: `npm test` and `npm run build` pass.
+
+Remaining high-impact gaps: stricter config validation, optional tool/lint signal enrichment, and continued docs/schema polish.

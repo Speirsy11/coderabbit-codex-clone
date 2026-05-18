@@ -43,6 +43,32 @@ test("root commit detection ignores commit message parent-looking lines", async 
   assert.match(result.diff, /\+hello/);
 });
 
+
+test("base diff errors explain shallow or unfetched base remediation", async () => {
+  const dir = await createRootCommit("initial");
+
+  await assert.rejects(
+    collectDiff({
+      dir,
+      type: "all",
+      base: "missing-main",
+      configFiles: [],
+      color: false,
+      maxDiffBytes: 10000,
+      mode: "plain",
+      fix: false
+    }),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      assert.match(err.message, /Unable to diff against base branch/);
+      assert.match(err.message, /No merge base was found|unknown revision|ambiguous argument/);
+      assert.match(err.message, /git fetch origin missing-main --depth=50/);
+      assert.match(err.message, /fetch-depth: 0/);
+      return true;
+    }
+  );
+});
+
 async function createRootCommit(message: string): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "crx-root-"));
   git(dir, ["init"]);
