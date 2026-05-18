@@ -34,7 +34,7 @@ crx auth status
 crx config init
 ```
 
-`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `finding`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes.
+`--plain` is the default. `--agent` emits JSONL-only stdout with one event per line: `review_context`, `status`, `warning`, `finding`, `autofix`, `complete`, and `error`. See `docs/agent-contract.md` for the versioned schema and exit codes. `crx.config.json` supports path filters, glob-scoped path instructions, and auto-detected guideline file patterns for agent reviews.
 
 `--tui`/`--interactive` opens a lightweight terminal UI with a spinner, severity counts, grouped findings, and an optional prompt to apply Codex-generated fixes for blocking findings.
 

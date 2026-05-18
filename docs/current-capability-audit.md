@@ -343,3 +343,25 @@ Implemented from Slice 2:
 Validation: `npm test` and `npm run build` pass.
 
 Remaining high-impact gaps: base-branch remediation in shallow/fresh clones, CI examples, and richer auto-fix worktree status reporting.
+
+## Update: Review scope and instructions v0.1 (2026-05-18 14:29 BST)
+
+Implemented since the previous loop:
+
+- Added default path filters for dependency, build, coverage, lock, minified, sourcemap, archive, and common binary/media outputs.
+- Added repo config fields for `pathFilters`, `pathInstructions`, and `codeGuidelines.filePatterns`.
+- Applied path filtering before prompt construction and report excluded files in `review_context.excludedFiles` plus warning events.
+- Added glob-scoped path instructions to the review prompt when changed files match configured patterns.
+- Auto-detected common guideline files such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, and `.github/copilot-instructions.md`, while reusing the existing safe instruction-file validation.
+- Added unit tests for glob matching, diff block filtering, file extraction, and path-instruction rendering.
+- Added an E2E mocked Codex test proving filters, guideline files, and path instructions shape the captured review prompt.
+
+Current production-readiness score: **7.2 / 10**.
+
+Remaining high-impact gaps:
+
+1. Add a packaged GitHub Actions/generic CI recipe so agents can run the gate consistently after each change set.
+2. Add a machine-readable JSON Schema fixture for agent events.
+3. Add friendlier base-branch/shallow-clone remediation.
+4. Add optional local tool command integration for linters/tests/security scanners.
+5. Report auto-fix changed files and pre/post worktree status.

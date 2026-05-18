@@ -44,7 +44,7 @@ Review scope and diff metadata.
 }
 ```
 
-For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files excluded by path filters are listed in `excludedFiles`. Auto-detected and explicit instruction files are listed in `instructionFiles`.
+For `all` and `uncommitted`, small untracked text files are included in review input. Large, binary, unreadable, and non-file untracked paths are skipped and listed in `skippedUntrackedFiles`. Files matching path filters are excluded before prompt construction and listed in `excludedFiles`. Auto-detected guideline files and explicit `-c/--config` files are listed in `instructionFiles`. Files excluded by path filters are listed in `excludedFiles`. Auto-detected and explicit instruction files are listed in `instructionFiles`.
 
 ### `warning`
 

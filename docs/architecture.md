@@ -5,9 +5,9 @@
 ## Data Flow
 
 1. `src/cli.ts` parses commands and options.
-2. `src/git.ts` verifies the selected directory is a Git repo and collects a diff with safe `spawn` arguments. `src/scope.ts` filters generated/dependency paths and computes path-specific instruction context.
+2. `src/git.ts` verifies the selected directory is a Git repo and collects a diff with safe `spawn` arguments, then applies configured path filters. `src/scope.ts` filters generated/dependency paths and computes path-specific instruction context.
 3. `src/redact.ts` removes likely secrets from the diff.
-4. `src/config.ts` loads `crx.config.json` and optional review preferences.
+4. `src/config.ts` loads `crx.config.json`, review preferences, path filters, path instructions, and guideline patterns.
 5. `src/prompt.ts` builds a strict JSON-only review prompt.
 6. `src/codex.ts` invokes `codex exec -` through the trusted Codex command and sends the review prompt over stdin.
 7. `src/parser.ts` extracts and validates findings from Codex output.

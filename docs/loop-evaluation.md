@@ -35,3 +35,35 @@
 ### Chosen next slice
 
 Implement P0 review-scope controls: safe path filters for generated/dependency/binary/media files and simple glob-scoped path instructions surfaced in the review prompt and tests.
+
+## 2026-05-18 14:29 BST — Loop 2: Review scope and instructions v0.1
+
+### Development completed
+
+- Added default path filtering for generated/dependency/binary/media-ish files.
+- Added `pathFilters`, `pathInstructions`, and `codeGuidelines.filePatterns` config support.
+- Filtered excluded diff blocks before prompt construction and surfaced `excludedFiles` in JSONL context/warnings.
+- Auto-loaded common guideline files using the existing safe file validation path.
+- Added glob-scoped path instructions to prompts for matching changed files.
+- Added unit and E2E tests for filtering, guidelines, and prompt shaping.
+
+### Validation
+
+- `npm test` — pass, 35 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**7.2 / 10**. The review gate is less noisy and more context-aware, which directly improves agent usefulness after each change set. It still lacks a ready-to-copy CI recipe and machine-readable JSON Schema.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- CI/change-set automation recipe.
+- JSON Schema fixture for the documented event contract.
+- Optional local tool results as first-class quality signals.
+- Better base-branch failure messages.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Add CI quality-gate packaging: GitHub Actions and generic shell examples, a JSON Schema fixture for events, and CLI/docs checks that make the agent contract easier to consume in automation.
