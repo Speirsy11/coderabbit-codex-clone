@@ -130,3 +130,63 @@ Add optional local tool-result events for project-native lint/test/security chec
 ### Chosen next slice
 
 Add schema/contract self-checking and/or a second-pass agent loop helper, choosing whichever is safer after the next status check.
+
+## 2026-05-18 14:35 BST — Loop 4: Base diff remediation v0.5
+
+### Development completed
+
+- Inspected and validated commit `e3d8264` (`Improve base diff remediation`), which had already landed on `origin/main`.
+- `--base` / `--base-commit` diff failures now include targeted remediation for missing merge bases, shallow/fresh CI clones, unfetched refs, `git fetch origin <base> --depth=50`, and GitHub Actions `fetch-depth: 0`.
+- Added regression coverage for the missing/unfetched base path.
+
+### Validation
+
+- `npm test` — pass, 39 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**7.7 / 10**. The CI quality gate is more usable in real checkout topologies because a common shallow/fresh-clone failure now gives an actionable fix instead of opaque Git output.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Optional local lint/test/security tool signals are still missing.
+- Runtime JSON Schema validation is still missing.
+- Review profile/noise controls are not implemented.
+- Hosted/team features remain deferred.
+
+### Chosen next slice
+
+Implement optional local tool quality signals as `tool_result` JSONL events and prompt context, with blocking failures mapped to the agent gate.
+
+## 2026-05-18 14:35 BST — Loop 5: Local tool quality signals v0.6
+
+### Development completed
+
+- Commit `4d257b0` (`Add local tool quality signals`).
+- Added `localTools` config support with typed sanitization and bounded defaults.
+- Added `src/tools.ts` to run configured commands without shell interpolation, capture bounded stdout/stderr, handle timeouts, and emit `tool_result` events.
+- Integrated local tool output into the Codex prompt as deterministic quality context.
+- Blocking local tool failures now make the agent gate exit `3`; non-blocking failures remain advisory.
+- Extended the JSON Schema for `tool_result`, `worktree_status`, and auto-fix `changedFiles`.
+- Added unit and E2E coverage for command safety, blocking semantics, prompt context, config sanitization, and schema visibility.
+
+### Validation
+
+- `npm test` — pass, 45 tests.
+- `npm run build` — pass.
+
+### Production-readiness score
+
+**8.0 / 10**. `crx --agent` now combines Codex review with deterministic project-native checks, which is a major CodeRabbit-parity step for local/CI quality gates after each change set. The gate remains intentionally local-first and does not claim hosted sandbox parity.
+
+### Remaining gaps compared with CodeRabbit docs matrix
+
+- Runtime validation against `docs/schema/agent-event.schema.json` is not wired into the CLI.
+- CI docs should show `localTools` examples for npm/ruff/semgrep-style checks.
+- Review profile/noise controls (`chill` vs `assertive`) remain unimplemented.
+- Hosted PR bot, dashboards, org learnings, MCP, and cross-repo context remain deferred.
+
+### Chosen next slice
+
+Add docs/examples for local tool configuration in CI and consider a small runtime/schema validation or review-profile slice next.
